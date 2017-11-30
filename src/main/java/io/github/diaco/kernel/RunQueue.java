@@ -5,18 +5,22 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 public class RunQueue {
 
-    private BlockingQueue<String> queue = null;
+    private BlockingQueue<Runnable> queue = null;
     
     public RunQueue() {
-	queue = new ArrayBlockingQueue<String>(1024);
+        queue = new ArrayBlockingQueue<Runnable>(1024);
     }
 
-    public void put(String actor) throws InterruptedException {
-	queue.put(actor);
+    public void put(Runnable actor) throws InterruptedException {
+        queue.put(actor);
     }
 
-    public String take() throws InterruptedException {
-	return queue.take();
+    public Runnable take() throws InterruptedException {
+        return queue.take();
+    }
+
+    public BlockingQueue<Runnable> getQueue() {
+        return queue;
     }
     
 }
