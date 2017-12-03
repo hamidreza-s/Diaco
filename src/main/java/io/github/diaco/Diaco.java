@@ -1,32 +1,19 @@
 package io.github.diaco;
 
-import io.github.diaco.kernel.RunQueue;
-import io.github.diaco.kernel.Scheduler;
+import io.github.diaco.core.Actor;
+import io.github.diaco.core.Scheduler;
 
 public class Diaco {
 
-    private static Diaco instance = null;
-
-    private RunQueue runQueue = null;
-
-    private Scheduler scheduler = null;
+    private static Diaco instance;
+    private Scheduler scheduler;
 
     protected Diaco() {
-        runQueue = new RunQueue();
-        scheduler = new Scheduler(runQueue);
-        scheduler.start();
+        scheduler = new Scheduler();
     }
 
-    public void spawn(Runnable actor) {
-        try {
-            runQueue.put(actor);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void halt() {
-        // TODO ...
+    public void spawn(Actor actor) {
+        scheduler.spawn(actor);
     }
 
     public static Diaco getInstance() {
@@ -36,11 +23,4 @@ public class Diaco {
         return instance;
     }
 
-    public Scheduler getScheduler() {
-        return scheduler;
-    }
-
-    public RunQueue getRunQueue() {
-        return runQueue;
-    }
 }
