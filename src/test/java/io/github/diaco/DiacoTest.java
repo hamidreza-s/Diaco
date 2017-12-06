@@ -1,10 +1,13 @@
 package io.github.diaco;
 
+import io.github.diaco.actor.Actor;
+import io.github.diaco.actor.RawActor;
+import io.github.diaco.message.Message;
+import io.github.diaco.message.RawMessage;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import io.github.diaco.core.Actor;
-import io.github.diaco.core.Message;
 
 public class DiacoTest extends TestCase {
 
@@ -19,7 +22,7 @@ public class DiacoTest extends TestCase {
     public void testDiaco() {
         Diaco diaco = Diaco.getInstance();
 
-        Actor actor1 = new Actor() {
+        Actor actor1 = new RawActor() {
             public void init() {
                 System.out.println("Actor 1 started");
             };
@@ -33,7 +36,7 @@ public class DiacoTest extends TestCase {
             }
         };
 
-        Actor actor2 = new Actor() {
+        Actor actor2 = new RawActor() {
             public void init() {
                 System.out.println("Actor 2 started");
             }
@@ -50,8 +53,8 @@ public class DiacoTest extends TestCase {
         diaco.spawn(actor1);
         diaco.spawn(actor2);
 
-        Message message1 = new Message("hey");
-        Message message2 = new Message("hi");
+        Message message1 = new RawMessage("hey");
+        Message message2 = new RawMessage("hi");
 
         actor1.send(actor2, message1);
         actor2.send(actor1, message2);

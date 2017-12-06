@@ -1,5 +1,7 @@
 package io.github.diaco.core;
 
+import io.github.diaco.actor.Actor;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 

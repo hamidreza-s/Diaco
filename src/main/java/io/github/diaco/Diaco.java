@@ -1,7 +1,7 @@
 package io.github.diaco;
 
-import io.github.diaco.core.Actor;
 import io.github.diaco.core.Scheduler;
+import io.github.diaco.actor.Actor;
 
 public class Diaco {
 

@@ -1,10 +1,12 @@
-package io.github.diaco.core;
+package io.github.diaco.actor;
+
+import io.github.diaco.message.Message;
 
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-public abstract class Actor implements Runnable {
+public abstract class AbstractActor implements Actor {
 
     // TODO: add API for setting and getting actor options
 
@@ -13,12 +15,12 @@ public abstract class Actor implements Runnable {
     public String id;
     public BlockingQueue<Message> mailbox;
 
-    public Actor() {
+    public AbstractActor() {
         // TODO: define defauls based on configuration
         this(new HashMap<String, String>());
     }
 
-    public Actor(HashMap<String, String> options) {
+    public AbstractActor(HashMap<String, String> options) {
         // TODO: parse options for defaults
         // TODO: use incremental number for actor id
         // TODO: increment reduction based on different factors
@@ -37,12 +39,16 @@ public abstract class Actor implements Runnable {
     public final void send(Actor actor, Message message) {
         message.setFrom(this);
         message.setTo(actor);
+        AbstractActor abstractActor = (AbstractActor) actor;
+        abstractActor.putIntoMailbox(message);
+    }
 
+    private void putIntoMailbox(Message message) {
         try {
-            actor.mailbox.put(message);
-        } catch(InterruptedException e) {
-            e.printStackTrace();
-        }
+            this.mailbox.put(message);
+         } catch(InterruptedException e) {
+             e.printStackTrace();
+         }
     }
 
     private void loop() {

@@ -1,6 +1,8 @@
-package io.github.diaco.core;
+package io.github.diaco.message;
 
-public class Message {
+import io.github.diaco.actor.Actor;
+
+public abstract class AbstractMessage implements Message {
 
     // TODO: define message types (signal, etc)
     // TODO: protect getFrom and getTo from NullPointerException
@@ -9,7 +11,7 @@ public class Message {
     private Actor to;
     private Object body;
 
-    public Message(Object body) {
+    public AbstractMessage(Object body) {
         this.body = body;
     }
 
