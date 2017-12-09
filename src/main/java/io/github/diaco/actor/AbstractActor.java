@@ -10,8 +10,6 @@ import java.util.concurrent.BlockingQueue;
 
 abstract class AbstractActor implements Actor, Comparable<Actor> {
 
-    // TODO: add API for setting and getting actor options
-
     public static final Integer DEFAULT_PRIORITY = 0;
     private Integer priority;
     private Integer reduction;
@@ -23,7 +21,6 @@ abstract class AbstractActor implements Actor, Comparable<Actor> {
     }
 
     protected AbstractActor(Integer priority) {
-        // TODO: increment reduction based on different factors
         this.priority = priority;
         this.reduction = 0;
         this.identifier = Scheduler.getFreeActorIdentifier();
@@ -55,6 +52,9 @@ abstract class AbstractActor implements Actor, Comparable<Actor> {
         // TODO: take messages based on priority
         // TODO: catch signals and take action upon them
         // TODO: catch EXIT signal and call terminate callback
+
+        reduction++;
+
         try {
             Message message = mailbox.take();
             receive(message);
