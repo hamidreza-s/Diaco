@@ -7,6 +7,7 @@ public interface Message {
     public Object getBody();
     public Actor getFrom();
     public Actor getTo();
+    public int getPriority();
     public void setFrom(Actor from);
     public void setTo(Actor to);
 
