@@ -12,23 +12,22 @@ abstract class AbstractActor implements Actor, Comparable<Actor> {
 
     // TODO: add API for setting and getting actor options
 
+    public static final Integer DEFAULT_PRIORITY = 0;
     private Integer priority;
     private Integer reduction;
     private Integer identifier;
     private BlockingQueue<Message> mailbox;
 
     protected AbstractActor() {
-        // TODO: define default based on configuration
-        this(new HashMap<String, String>());
+        this(DEFAULT_PRIORITY);
     }
 
-    protected AbstractActor(HashMap<String, String> options) {
-        // TODO: parse options for defaults
+    protected AbstractActor(Integer priority) {
         // TODO: increment reduction based on different factors
-        priority = 0;
-        reduction = 0;
-        identifier = Scheduler.getFreeActorIdentifier();
-        mailbox = new ArrayBlockingQueue<Message>(1024);
+        this.priority = priority;
+        this.reduction = 0;
+        this.identifier = Scheduler.getFreeActorIdentifier();
+        this.mailbox = new ArrayBlockingQueue<Message>(1024);
     }
 
     public abstract void init();
