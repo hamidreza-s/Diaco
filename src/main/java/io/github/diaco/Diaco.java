@@ -10,6 +10,7 @@ public class Diaco {
 
     protected Diaco() {
         scheduler = new Scheduler();
+        scheduler.start();
     }
 
     public void spawn(Actor actor) {

@@ -2,22 +2,49 @@ package io.github.diaco.core;
 
 import io.github.diaco.actor.Actor;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.PriorityBlockingQueue;
 
 public class Scheduler {
 
-    protected ExecutorService executor;
+    private static final int DEFAULT_RUN_QUEUE_SIZE = 1024;
+    private ExecutorService executor;
+    private BlockingQueue<Actor> runQueue;
 
-    // TODO: use configuration for thread pool number
-    // TODO: execute actors based on their priority
     // TODO: collect scheduler statistics
     public Scheduler() {
-        this.executor = Executors.newFixedThreadPool(10);
+        this(
+                Runtime.getRuntime().availableProcessors(),
+                DEFAULT_RUN_QUEUE_SIZE
+        );
+    }
+
+    public Scheduler(int poolSize, int runQueueSize) {
+        this.executor = Executors.newFixedThreadPool(poolSize);
+        this.runQueue = new PriorityBlockingQueue<Actor>(runQueueSize);
     }
 
     public void spawn(Actor actor) {
-        executor.execute(actor);
+        try {
+            runQueue.put(actor);
+        } catch(InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
+    public void start() {
+        new Thread(new Runnable() {
+            public void run() {
+                while(true) {
+                    try {
+                        executor.execute(runQueue.take());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
+    }
 }

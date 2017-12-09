@@ -2,25 +2,26 @@ package io.github.diaco.actor;
 
 import io.github.diaco.message.Message;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-public abstract class AbstractActor implements Actor {
+abstract class AbstractActor implements Actor, Comparable<Actor> {
 
     // TODO: add API for setting and getting actor options
 
-    public Integer priority;
-    public Integer reduction;
-    public String id;
-    public BlockingQueue<Message> mailbox;
+    private Integer priority;
+    private Integer reduction;
+    private String id;
+    private BlockingQueue<Message> mailbox;
 
-    public AbstractActor() {
-        // TODO: define defauls based on configuration
+    protected AbstractActor() {
+        // TODO: define default based on configuration
         this(new HashMap<String, String>());
     }
 
-    public AbstractActor(HashMap<String, String> options) {
+    protected AbstractActor(HashMap<String, String> options) {
         // TODO: parse options for defaults
         // TODO: use incremental number for actor id
         // TODO: increment reduction based on different factors
@@ -52,6 +53,7 @@ public abstract class AbstractActor implements Actor {
     }
 
     private void loop() {
+        // TODO: take messages based on priority
         // TODO: catch signals and take action upon them
         // TODO: catch EXIT signal and call terminate callback
         try {
@@ -67,6 +69,18 @@ public abstract class AbstractActor implements Actor {
         init();
         loop();
         terminate();
+    }
+
+    public int compareTo(Actor other) {
+        return this.getPriority().compareTo(other.getPriority());
+    }
+
+    public Integer getPriority() {
+        return this.priority;
+    }
+
+    public Integer getReduction() {
+        return this.reduction;
     }
 
 }
