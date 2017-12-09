@@ -59,6 +59,13 @@ public class DiacoTest extends TestCase {
         actor1.send(actor2, message1);
         actor2.send(actor1, message2);
 
+        System.out.printf("Actor 1: priority %d, reduction %d, identifier %d\n",
+                actor1.getPriority(), actor1.getReduction(), actor1.getIdentifier());
+
+        System.out.printf("Actor 2: priority %d, reduction %d, identifier %d\n",
+                actor2.getPriority(), actor2.getReduction(), actor2.getIdentifier());
+
+
         try {
             Thread.sleep(1000);
         } catch(InterruptedException e) {

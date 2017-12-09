@@ -1,5 +1,6 @@
 package io.github.diaco.actor;
 
+import io.github.diaco.core.Scheduler;
 import io.github.diaco.message.Message;
 
 import java.util.Comparator;
@@ -13,7 +14,7 @@ abstract class AbstractActor implements Actor, Comparable<Actor> {
 
     private Integer priority;
     private Integer reduction;
-    private String id;
+    private Integer identifier;
     private BlockingQueue<Message> mailbox;
 
     protected AbstractActor() {
@@ -23,11 +24,10 @@ abstract class AbstractActor implements Actor, Comparable<Actor> {
 
     protected AbstractActor(HashMap<String, String> options) {
         // TODO: parse options for defaults
-        // TODO: use incremental number for actor id
         // TODO: increment reduction based on different factors
         priority = 0;
         reduction = 0;
-        id = "random-actor-id";
+        identifier = Scheduler.getFreeActorIdentifier();
         mailbox = new ArrayBlockingQueue<Message>(1024);
     }
 
@@ -83,4 +83,7 @@ abstract class AbstractActor implements Actor, Comparable<Actor> {
         return this.reduction;
     }
 
+    public Integer getIdentifier() {
+        return this.identifier;
+    }
 }

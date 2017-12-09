@@ -10,8 +10,10 @@ import java.util.concurrent.PriorityBlockingQueue;
 public class Scheduler {
 
     private static final int DEFAULT_RUN_QUEUE_SIZE = 1024;
+    private static Integer currentActorIdentifier = 0;
     private ExecutorService executor;
     private BlockingQueue<Actor> runQueue;
+
 
     // TODO: collect scheduler statistics
     public Scheduler() {
@@ -32,6 +34,10 @@ public class Scheduler {
         } catch(InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public static Integer getFreeActorIdentifier() {
+        return currentActorIdentifier++;
     }
 
     public void start() {

@@ -16,5 +16,6 @@ public interface Actor extends Runnable {
 
     public Integer getPriority();
     public Integer getReduction();
+    public Integer getIdentifier();
 
 }
