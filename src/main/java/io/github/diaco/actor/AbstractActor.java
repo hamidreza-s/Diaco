@@ -3,28 +3,27 @@ package io.github.diaco.actor;
 import io.github.diaco.core.Scheduler;
 import io.github.diaco.message.Message;
 
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 abstract class AbstractActor implements Actor, Comparable<Actor> {
 
-    public static final Integer DEFAULT_PRIORITY = 0;
+    public static final int DEFAULT_PRIORITY = 0;
+    public static final int DEFAULT_MAILBOX_SIZE = 1024;
     private Integer priority;
     private Integer reduction;
     private Integer identifier;
     private BlockingQueue<Message> mailbox;
 
     protected AbstractActor() {
-        this(DEFAULT_PRIORITY);
+        this(DEFAULT_PRIORITY, DEFAULT_MAILBOX_SIZE);
     }
 
-    protected AbstractActor(Integer priority) {
+    protected AbstractActor(int priority, int mailboxSize) {
         this.priority = priority;
         this.reduction = 0;
         this.identifier = Scheduler.getFreeActorIdentifier();
-        this.mailbox = new ArrayBlockingQueue<Message>(1024);
+        this.mailbox = new ArrayBlockingQueue<Message>(mailboxSize);
     }
 
     public abstract void init();
