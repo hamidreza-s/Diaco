@@ -14,7 +14,6 @@ public class Scheduler {
     private ExecutorService executor;
     private BlockingQueue<Actor> runQueue;
 
-
     // TODO: collect scheduler statistics
     public Scheduler() {
         this(

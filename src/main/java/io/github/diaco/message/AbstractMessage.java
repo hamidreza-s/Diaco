@@ -4,8 +4,6 @@ import io.github.diaco.actor.Actor;
 
 abstract class AbstractMessage implements Message, Comparable<Message> {
 
-    // TODO: protect getFrom and getTo from NullPointerException
-
     private Actor from;
     private Actor to;
     private Object body;
