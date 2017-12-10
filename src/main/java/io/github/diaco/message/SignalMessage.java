@@ -2,7 +2,7 @@ package io.github.diaco.message;
 
 public class SignalMessage extends AbstractMessage {
 
-    public static final int DEFAULT_PRIORITY = 0;
+    public static final Integer DEFAULT_PRIORITY = 0;
     public enum Type {
         EXIT,
         LINK,

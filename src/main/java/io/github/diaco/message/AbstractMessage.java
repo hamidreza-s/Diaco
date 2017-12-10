@@ -2,17 +2,16 @@ package io.github.diaco.message;
 
 import io.github.diaco.actor.Actor;
 
-abstract class AbstractMessage implements Message {
+abstract class AbstractMessage implements Message, Comparable<Message> {
 
-    // TODO: define message types (signal, etc)
     // TODO: protect getFrom and getTo from NullPointerException
 
     private Actor from;
     private Actor to;
     private Object body;
-    private int priority;
+    private Integer priority;
 
-    public AbstractMessage(Object body, int priority) {
+    public AbstractMessage(Object body, Integer priority) {
         this.body = body;
         if(priority == 0 && !(this instanceof SignalMessage)) {
             throw new RuntimeException("Priority 0 is reserved for SignalMessage!");
@@ -32,7 +31,7 @@ abstract class AbstractMessage implements Message {
         return to;
     }
 
-    public int getPriority() {
+    public Integer getPriority() {
         return priority;
     }
 
@@ -42,6 +41,10 @@ abstract class AbstractMessage implements Message {
 
     public void setTo(Actor to) {
         this.to = to;
+    }
+
+    public int compareTo(Message other) {
+        return this.getPriority().compareTo(other.getPriority());
     }
 
 }

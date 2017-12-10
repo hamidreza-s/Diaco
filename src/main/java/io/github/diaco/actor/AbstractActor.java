@@ -3,8 +3,8 @@ package io.github.diaco.actor;
 import io.github.diaco.core.Scheduler;
 import io.github.diaco.message.Message;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
 abstract class AbstractActor implements Actor, Comparable<Actor> {
 
@@ -23,7 +23,7 @@ abstract class AbstractActor implements Actor, Comparable<Actor> {
         this.priority = priority;
         this.reduction = 0;
         this.identifier = Scheduler.getFreeActorIdentifier();
-        this.mailbox = new ArrayBlockingQueue<Message>(mailboxSize);
+        this.mailbox = new PriorityBlockingQueue<Message>(mailboxSize);
     }
 
     public abstract void init();
@@ -48,7 +48,6 @@ abstract class AbstractActor implements Actor, Comparable<Actor> {
     }
 
     private void loop() {
-        // TODO: take messages based on priority
         // TODO: catch signals and take action upon them
         // TODO: catch EXIT signal and call terminate callback
 
