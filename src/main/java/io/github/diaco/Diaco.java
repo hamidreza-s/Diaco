@@ -5,6 +5,14 @@ import io.github.diaco.actor.Actor;
 
 public class Diaco {
 
+    // TODO: define core.Configuration
+
+    // TODO: define interface message.Serializer
+    // TODO: define class     message.ObjectSerializer
+
+    // TODO: define class     node.Agent
+    // TODO: define class     node.Registry
+
     private static Diaco instance;
     private Scheduler scheduler;
 

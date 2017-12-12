@@ -2,18 +2,33 @@ package io.github.diaco.actor;
 
 import io.github.diaco.message.Message;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.List;
+import java.util.Map;
 
-public interface Actor extends Runnable {
 
-    public void init();
-    public void receive(Message message);
+public interface Actor<State> extends Runnable {
+
+    public enum Status {
+        STARTING,
+        WAITING,
+        RUNNING,
+        EXITING
+    }
+
+    public void init(List<State> state);
+    public void receive(Message message, List<State> state);
     public void send(Actor actor, Message message);
-    public void terminate();
+    public void link(Actor actor);
+    public void unlink(Actor actor);
+    public void monitor(Actor actor);
+    public void unmonitor(Actor actor);
+    public void exit(Actor actor);
+    public void terminate(List<State> state);
 
+    public Map<Integer, Actor> listLinkedBy();
+    public Map<Integer, Actor> listMonitoredBy();
+
+    public Status getStatus();
     public Integer getPriority();
     public Integer getReduction();
     public Integer getIdentifier();

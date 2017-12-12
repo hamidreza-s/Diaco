@@ -4,11 +4,17 @@ import io.github.diaco.actor.Actor;
 import io.github.diaco.actor.RawActor;
 import io.github.diaco.message.Message;
 import io.github.diaco.message.DataMessage;
-
 import io.github.diaco.message.SignalMessage;
+
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class DiacoTest extends TestCase {
 
@@ -20,59 +26,61 @@ public class DiacoTest extends TestCase {
         return new TestSuite(DiacoTest.class);
     }
 
-    public void testDiaco() {
+    public void testActorLinking() throws InterruptedException {
         Diaco diaco = Diaco.getInstance();
+        final CountDownLatch lock = new CountDownLatch(1);
 
-        Actor actor1 = new RawActor() {
-            public void init() {
-                System.out.println("Actor 1 started");
+        final Actor<Message> actorTester = new RawActor<Message>() {
+            public void init(List<Message> state) {};
+            public void receive(Message message, List<Message> state) {
+                state.add(message);
+                if(state.size() == 2) {
+                    terminate(state);
+                }
+            }
+            public void terminate(List<Message> state) {
+                // TODO: use assert to compare state with expected state
+                System.out.println(state);
+                lock.countDown();
+            }
+        };
+
+        Actor<String> actorOne = new RawActor<String>() {
+            public void init(List<String> state) {
+                state.add("actor:one:started");
             };
-            public void receive(Message message) {
-                System.out.printf(
-                        "Actor 1 got message %s in thread %s\n",
-                        message.getBody(), Thread.currentThread().getName());
-            }
-            public void terminate() {
-                System.out.println("Actor 1 was terminated");
+            public void receive(Message message, List<String> state) {}
+            public void terminate(List<String> state) {
+                state.add("actor:one:terminated");
+                send(actorTester, new DataMessage<List<String>>(state));
             }
         };
 
-        Actor actor2 = new RawActor() {
-            public void init() {
-                System.out.println("Actor 2 started");
+        Actor<String> actorTwo = new RawActor<String>() {
+            public void init(List<String> state) {
+                state.add("actor:two:started");
             }
-            public void receive(Message message) {
-                System.out.printf(
-                        "Actor 2 got message %s in thread %s\n",
-                        message.getBody(), Thread.currentThread().getName());
-            }
-            public void terminate() {
-                System.out.println("Actor 2 was terminated");
+            public void receive(Message message, List<String> state) {}
+            public void terminate(List<String> state) {
+                state.add("actor:two:terminated");
+                send(actorTester, new DataMessage<List<String>>(state));
             }
         };
 
-        diaco.spawn(actor1);
-        diaco.spawn(actor2);
+        diaco.spawn(actorTester);
+        diaco.spawn(actorOne);
+        diaco.spawn(actorTwo);
 
-        Message message1 = new DataMessage<String>("hey");
-        Message message2 = new DataMessage<String>("hi");
+        actorOne.link(actorTwo);
+        actorTester.exit(actorTwo);
 
-        actor1.send(actor2, message1);
-        actor2.send(actor1, message2);
+        lock.await();
 
-        System.out.printf("Actor 1: priority %d, reduction %d, identifier %d\n",
-                actor1.getPriority(), actor1.getReduction(), actor1.getIdentifier());
+    }
 
-        System.out.printf("Actor 2: priority %d, reduction %d, identifier %d\n",
-                actor2.getPriority(), actor2.getReduction(), actor2.getIdentifier());
+    public void testActorMonitoring() throws InterruptedException {
+    }
 
-        Message message3 = new SignalMessage(SignalMessage.Type.EXIT);
-        actor1.send(actor2, message3);
-
-        try {
-            Thread.sleep(1000);
-        } catch(InterruptedException e) {
-            e.printStackTrace();
-        }
+    public void testMessagePassing() throws InterruptedException {
     }
 }

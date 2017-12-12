@@ -4,8 +4,11 @@ public class SignalMessage extends AbstractMessage {
 
     public enum Type {
         EXIT,
+        EXITED,
         LINK,
-        MONITOR
+        UNLINK,
+        MONITOR,
+        UNMONITOR
     }
 
     public static final Integer DEFAULT_PRIORITY = 0;
