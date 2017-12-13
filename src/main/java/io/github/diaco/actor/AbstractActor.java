@@ -158,6 +158,10 @@ abstract class AbstractActor<State> implements Actor<State>, Comparable<Actor> {
         internalTerminate();
     }
 
+    public void stop() {
+        this.status = status.EXITING;
+    }
+
     public int compareTo(Actor other) {
         return this.getPriority().compareTo(other.getPriority());
     }

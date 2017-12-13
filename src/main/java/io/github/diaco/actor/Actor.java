@@ -24,6 +24,7 @@ public interface Actor<State> extends Runnable {
     public void unmonitor(Actor actor);
     public void exit(Actor actor);
     public void terminate(List<State> state);
+    public void stop();
 
     public Map<Integer, Actor> listLinkedBy();
     public Map<Integer, Actor> listMonitoredBy();
