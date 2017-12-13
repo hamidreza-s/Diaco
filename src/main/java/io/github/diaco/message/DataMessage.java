@@ -1,6 +1,6 @@
 package io.github.diaco.message;
 
-public class DataMessage<BodyType> extends AbstractMessage {
+public class DataMessage<BodyType> extends AbstractMessage<BodyType> {
 
     public static final Integer DEFAULT_PRIORITY = 1;
 

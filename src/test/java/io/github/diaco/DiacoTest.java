@@ -32,38 +32,44 @@ public class DiacoTest extends TestCase {
 
         final Actor<Message> actorTester = new RawActor<Message>() {
             public void init(List<Message> state) {};
+            @Override
             public void receive(Message message, List<Message> state) {
+                // FIXME: get DataMessage instead of Message
                 state.add(message);
                 if(state.size() == 2) {
                     terminate(state);
                 }
             }
+            @Override
             public void terminate(List<Message> state) {
-                // TODO: use assert to compare state with expected state
+                assertEquals("actor:two:started-actor:two:terminated", (String) state.get(0).getBody());
+                assertEquals("actor:one:started-actor:one:terminated", (String) state.get(1).getBody());
                 System.out.println(state);
                 lock.countDown();
             }
         };
 
         Actor<String> actorOne = new RawActor<String>() {
+            @Override
             public void init(List<String> state) {
                 state.add("actor:one:started");
             };
-            public void receive(Message message, List<String> state) {}
+            @Override
             public void terminate(List<String> state) {
                 state.add("actor:one:terminated");
-                send(actorTester, new DataMessage<List<String>>(state));
+                send(actorTester, new DataMessage<String>(state.get(0) + "-" + state.get(1)));
             }
         };
 
         Actor<String> actorTwo = new RawActor<String>() {
+            @Override
             public void init(List<String> state) {
                 state.add("actor:two:started");
             }
-            public void receive(Message message, List<String> state) {}
+            @Override
             public void terminate(List<String> state) {
                 state.add("actor:two:terminated");
-                send(actorTester, new DataMessage<List<String>>(state));
+                send(actorTester, new DataMessage<String>(state.get(0) + "-" + state.get(1)));
             }
         };
 

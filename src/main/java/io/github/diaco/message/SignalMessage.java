@@ -1,6 +1,6 @@
 package io.github.diaco.message;
 
-public class SignalMessage extends AbstractMessage {
+public class SignalMessage extends AbstractMessage<SignalMessage.Type> {
 
     public enum Type {
         EXIT,
