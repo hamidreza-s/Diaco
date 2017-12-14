@@ -9,6 +9,7 @@ import io.github.diaco.message.SignalMessage;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import sun.text.resources.cldr.ms.FormatData_ms;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,10 +31,9 @@ public class DiacoTest extends TestCase {
         Diaco diaco = Diaco.getInstance();
         final CountDownLatch lock = new CountDownLatch(1);
 
-        final Actor<Message> actorTester = new RawActor<Message>() {
-            public void init(List<Message> state) {};
+        final Actor<Message<String>, String> actorTester = new RawActor<Message<String>, String>() {
             @Override
-            public void receive(Message message, List<Message> state) {
+            public void receive(Message<String> message, List<Message<String>> state) {
                 // FIXME: get DataMessage instead of Message
                 state.add(message);
                 if(state.size() == 2) {
@@ -41,15 +41,14 @@ public class DiacoTest extends TestCase {
                 }
             }
             @Override
-            public void terminate(List<Message> state) {
-                assertEquals("actor:two:started-actor:two:terminated", (String) state.get(0).getBody());
-                assertEquals("actor:one:started-actor:one:terminated", (String) state.get(1).getBody());
-                System.out.println(state);
+            public void terminate(List<Message<String>> state) {
+                assertEquals("actor:two:started-actor:two:terminated", state.get(0).getBody());
+                assertEquals("actor:one:started-actor:one:terminated", state.get(1).getBody());
                 lock.countDown();
             }
         };
 
-        Actor<String> actorOne = new RawActor<String>() {
+        Actor<String, String> actorOne = new RawActor<String, String>() {
             @Override
             public void init(List<String> state) {
                 state.add("actor:one:started");
@@ -61,7 +60,7 @@ public class DiacoTest extends TestCase {
             }
         };
 
-        Actor<String> actorTwo = new RawActor<String>() {
+        Actor<String, String> actorTwo = new RawActor<String, String>() {
             @Override
             public void init(List<String> state) {
                 state.add("actor:two:started");

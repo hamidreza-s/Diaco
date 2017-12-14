@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
-abstract class AbstractActor<State> implements Actor<State>, Comparable<Actor> {
+abstract class AbstractActor<State, MessageBodyType> implements Actor<State, MessageBodyType>, Comparable<Actor> {
 
     // TODO: add API for trapExit
 
@@ -45,7 +45,7 @@ abstract class AbstractActor<State> implements Actor<State>, Comparable<Actor> {
 
     public abstract void init(List<State> state);
 
-    public abstract void receive(Message message, List<State> state);
+    public abstract void receive(Message<MessageBodyType> message, List<State> state);
 
     public abstract void terminate(List<State> state);
 

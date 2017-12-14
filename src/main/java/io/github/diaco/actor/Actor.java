@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public interface Actor<State> extends Runnable {
+public interface Actor<State, MessageBodyType> extends Runnable {
 
     public enum Status {
         STARTING,
@@ -16,7 +16,7 @@ public interface Actor<State> extends Runnable {
     }
 
     public void init(List<State> state);
-    public void receive(Message message, List<State> state);
+    public void receive(Message<MessageBodyType> message, List<State> state);
     public void send(Actor actor, Message message);
     public void link(Actor actor);
     public void unlink(Actor actor);

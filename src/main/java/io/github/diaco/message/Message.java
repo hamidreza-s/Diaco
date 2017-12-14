@@ -2,9 +2,9 @@ package io.github.diaco.message;
 
 import io.github.diaco.actor.Actor;
 
-public interface Message {
+public interface Message<BodyType> {
 
-    public Object getBody();
+    public BodyType getBody();
     public Actor getFrom();
     public Actor getTo();
     public Integer getPriority();
