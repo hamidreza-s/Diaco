@@ -1,12 +1,13 @@
 package io.github.diaco.actor;
 
+import io.github.diaco.actor.State;
 import io.github.diaco.message.Message;
 
 import java.util.List;
 import java.util.Map;
 
 
-public interface Actor<State, MessageBodyType> extends Runnable {
+public interface Actor<StateBodyType, MessageBodyType> extends Runnable {
 
     public enum Status {
         STARTING,
@@ -15,15 +16,15 @@ public interface Actor<State, MessageBodyType> extends Runnable {
         EXITING
     }
 
-    public void init(List<State> state);
-    public void receive(Message<MessageBodyType> message, List<State> state);
-    public void send(Actor actor, Message message);
+    public void init(State<StateBodyType> state);
+    public void receive(Message<MessageBodyType> message, State<StateBodyType> state);
+    public void send(Actor actor, Message<MessageBodyType> message);
     public void link(Actor actor);
     public void unlink(Actor actor);
     public void monitor(Actor actor);
     public void unmonitor(Actor actor);
     public void exit(Actor actor);
-    public void terminate(List<State> state);
+    public void terminate(State<StateBodyType> state);
     public void stop();
 
     public Map<Integer, Actor> listLinkedBy();

@@ -1,15 +1,15 @@
 package io.github.diaco.actor;
 
 import io.github.diaco.message.Message;
+import io.github.diaco.actor.State;
 
-import java.util.List;
 
-public class RawActor<State, MessageBodyType> extends AbstractActor<State, MessageBodyType> {
+public class RawActor<StateBodyType, MessageBodyType> extends AbstractActor<StateBodyType, MessageBodyType> {
 
-    public void init(List<State> state) {}
+    public void init(State<StateBodyType> state) {}
 
-    public void receive(Message<MessageBodyType> message, List<State> state) {}
+    public void receive(Message<MessageBodyType> message, State<StateBodyType> state) {}
 
-    public void terminate(List<State> state) {}
+    public void terminate(State<StateBodyType> state) {}
 
 }

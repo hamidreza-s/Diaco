@@ -2,14 +2,13 @@ package io.github.diaco;
 
 import io.github.diaco.actor.Actor;
 import io.github.diaco.actor.RawActor;
+import io.github.diaco.actor.State;
 import io.github.diaco.message.Message;
-import io.github.diaco.message.RawMessage;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class DiacoTest extends TestCase {
@@ -28,42 +27,41 @@ public class DiacoTest extends TestCase {
 
         final Actor<Message<String>, String> actorTester = new RawActor<Message<String>, String>() {
             @Override
-            public void receive(Message<String> message, List<Message<String>> state) {
-                // FIXME: get DataMessage instead of Message
-                state.add(message);
-                if(state.size() == 2) {
+            public void receive(Message<String> message, State<Message<String>> state) {
+                state.getBody().add(message);
+                if(state.getBody().size() == 2) {
                     terminate(state);
                 }
             }
             @Override
-            public void terminate(List<Message<String>> state) {
-                assertEquals("actor:two:started-actor:two:terminated", state.get(0).getBody());
-                assertEquals("actor:one:started-actor:one:terminated", state.get(1).getBody());
+            public void terminate(State<Message<String>> state) {
+                assertEquals("actor:two:started-actor:two:terminated", state.getBody().get(0).getBody());
+                assertEquals("actor:one:started-actor:one:terminated", state.getBody().get(1).getBody());
                 lock.countDown();
             }
         };
 
         Actor<String, String> actorOne = new RawActor<String, String>() {
             @Override
-            public void init(List<String> state) {
-                state.add("actor:one:started");
+            public void init(State<String> state) {
+                state.getBody().add("actor:one:started");
             };
             @Override
-            public void terminate(List<String> state) {
-                state.add("actor:one:terminated");
-                send(actorTester, new RawMessage<String>(state.get(0) + "-" + state.get(1)));
+            public void terminate(State<String> state) {
+                state.getBody().add("actor:one:terminated");
+                send(actorTester, new Message<String>(state.getBody().get(0) + "-" + state.getBody().get(1)));
             }
         };
 
         Actor<String, String> actorTwo = new RawActor<String, String>() {
             @Override
-            public void init(List<String> state) {
-                state.add("actor:two:started");
+            public void init(State<String> state) {
+                state.getBody().add("actor:two:started");
             }
             @Override
-            public void terminate(List<String> state) {
-                state.add("actor:two:terminated");
-                send(actorTester, new RawMessage<String>(state.get(0) + "-" + state.get(1)));
+            public void terminate(State<String> state) {
+                state.getBody().add("actor:two:terminated");
+                send(actorTester, new Message<String>(state.getBody().get(0) + "-" + state.getBody().get(1)));
             }
         };
 

@@ -2,16 +2,14 @@ package io.github.diaco.actor;
 
 import io.github.diaco.core.Scheduler;
 import io.github.diaco.message.Message;
-import io.github.diaco.message.SignalMessage;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
-abstract class AbstractActor<State, MessageBodyType> implements Actor<State, MessageBodyType>, Comparable<Actor> {
+abstract class AbstractActor<StateBodyType, MessageBodyType>
+        implements Actor<StateBodyType, MessageBodyType>, Comparable<Actor> {
 
     // TODO: add API for trapExit
 
@@ -21,9 +19,9 @@ abstract class AbstractActor<State, MessageBodyType> implements Actor<State, Mes
     private Integer reduction;
     private Integer identifier;
     private boolean trapExit;
-    private BlockingQueue<Message> mailbox;
+    private BlockingQueue<Message<MessageBodyType>> mailbox;
     private Status status;
-    private List<State> state;
+    private State<StateBodyType> state;
     private Map<Integer, Actor> linkedBy;
     private Map<Integer, Actor> monitoredBy;
 
@@ -33,21 +31,21 @@ abstract class AbstractActor<State, MessageBodyType> implements Actor<State, Mes
 
     protected AbstractActor(int priority, int mailboxSize) {
         this.status = Status.STARTING;
-        this.state = new ArrayList<State>();
+        this.state = new State<StateBodyType>();
         this.priority = priority;
         this.reduction = 0;
         this.identifier = Scheduler.getFreeActorIdentifier();
         this.trapExit = false;
-        this.mailbox = new PriorityBlockingQueue<Message>(mailboxSize);
+        this.mailbox = new PriorityBlockingQueue<Message<MessageBodyType>>(mailboxSize);
         this.linkedBy = new HashMap<Integer, Actor>();
         this.monitoredBy = new HashMap<Integer, Actor>();
     }
 
-    public abstract void init(List<State> state);
+    public abstract void init(State<StateBodyType> state);
 
-    public abstract void receive(Message<MessageBodyType> message, List<State> state);
+    public abstract void receive(Message<MessageBodyType> message, State<StateBodyType> state);
 
-    public abstract void terminate(List<State> state);
+    public abstract void terminate(State<StateBodyType> state);
 
     // FIXME: what if more than one actor are sending one message concurrently?
     // TODO: messages must be passed by value (copy)
@@ -58,33 +56,45 @@ abstract class AbstractActor<State, MessageBodyType> implements Actor<State, Mes
         abstractActor.putIntoMailbox(message);
     }
 
+    private void putIntoMailbox(Message<MessageBodyType> message) {
+        try {
+            this.mailbox.put(message);
+        } catch(InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     public final void link(Actor actor) {
         this.linkedBy.put(actor.getIdentifier(), actor);
-        this.send(actor, new SignalMessage(SignalMessage.Type.LINK));
+        this.send(actor, new Message<String>(Message.HeadType.LINK, "LINKED", 0));
     }
 
     public final void unlink(Actor actor) {
         this.linkedBy.remove(actor.getIdentifier());
-        this.send(actor, new SignalMessage(SignalMessage.Type.UNLINK));
+        this.send(actor, new Message<String>(Message.HeadType.UNLINK, "UNLINKED", 0));
     }
 
     public final void monitor(Actor actor) {
-        this.send(actor, new SignalMessage(SignalMessage.Type.MONITOR));
+        this.send(actor, new Message<String>(Message.HeadType.MONITOR, "MONITOR", 0));
     }
 
     public final void unmonitor(Actor actor) {
-        this.send(actor, new SignalMessage(SignalMessage.Type.UNLINK));
+        this.send(actor, new Message<String>(Message.HeadType.UNMONITOR, "UNMONITOR", 0));
     }
 
     public final void exit(Actor actor) {
-        this.send(actor, new SignalMessage(SignalMessage.Type.EXIT));
+        this.send(actor, new Message<String>(Message.HeadType.EXIT, "EXIT", 0));
     }
 
-    private void internalReceive(Message message) {
-        this.status = Status.RUNNING;
-        if(message instanceof SignalMessage) {
+    public final void exited(Actor actor) {
+        this.send(actor, new Message<String>(Message.HeadType.EXITED, "EXITED", 0));
+    }
 
-            switch((SignalMessage.Type) message.getBody()) {
+    private void internalReceive(Message<MessageBodyType> message) {
+        this.status = Status.RUNNING;
+
+        if(message.getPriority() == 0) {
+            switch(message.getHead()) {
                 case EXIT:
                     if(trapExit) {
                         receive(message, this.state);
@@ -112,14 +122,6 @@ abstract class AbstractActor<State, MessageBodyType> implements Actor<State, Mes
         }
     }
 
-    private void putIntoMailbox(Message message) {
-        try {
-            this.mailbox.put(message);
-         } catch(InterruptedException e) {
-             e.printStackTrace();
-         }
-    }
-
     private void internalInit() {
         init(this.state);
     }
@@ -130,7 +132,7 @@ abstract class AbstractActor<State, MessageBodyType> implements Actor<State, Mes
 
         try {
             this.status = Status.WAITING;
-            Message message = mailbox.take();
+            Message<MessageBodyType> message = mailbox.take();
             internalReceive(message);
             if(this.status == Status.RUNNING) {
                 internalLoop();
@@ -142,11 +144,11 @@ abstract class AbstractActor<State, MessageBodyType> implements Actor<State, Mes
 
     private void internalTerminate() {
         for(Map.Entry<Integer, Actor> entry : this.monitoredBy.entrySet()) {
-            this.send(entry.getValue(), new SignalMessage(SignalMessage.Type.EXITED));
+            this.exited(entry.getValue());
         }
 
         for(Map.Entry<Integer, Actor> entry : this.linkedBy.entrySet()) {
-            this.send(entry.getValue(), new SignalMessage(SignalMessage.Type.EXIT));
+            this.exit(entry.getValue());
         }
 
         terminate(this.state);
@@ -159,7 +161,7 @@ abstract class AbstractActor<State, MessageBodyType> implements Actor<State, Mes
     }
 
     public void stop() {
-        this.status = status.EXITING;
+        this.status = Status.EXITING;
     }
 
     public int compareTo(Actor other) {
@@ -167,7 +169,7 @@ abstract class AbstractActor<State, MessageBodyType> implements Actor<State, Mes
     }
 
     public Status getStatus() {
-        return this.getStatus();
+        return this.status;
     }
 
     public Integer getPriority() {
