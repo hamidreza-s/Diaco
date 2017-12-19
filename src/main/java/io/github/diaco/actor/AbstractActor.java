@@ -49,6 +49,7 @@ abstract class AbstractActor<StateBodyType, MessageBodyType>
 
     // FIXME: what if more than one actor are sending one message concurrently?
     // TODO: messages must be passed by value (copy)
+    @SuppressWarnings("unchecked")
     public final void send(Actor actor, Message message) {
         message.setFrom(this);
         message.setTo(actor);
