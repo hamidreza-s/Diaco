@@ -3,19 +3,14 @@ package io.github.diaco;
 import io.github.diaco.actor.Actor;
 import io.github.diaco.actor.RawActor;
 import io.github.diaco.message.Message;
-import io.github.diaco.message.DataMessage;
-import io.github.diaco.message.SignalMessage;
+import io.github.diaco.message.RawMessage;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import sun.text.resources.cldr.ms.FormatData_ms;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 public class DiacoTest extends TestCase {
 
@@ -56,7 +51,7 @@ public class DiacoTest extends TestCase {
             @Override
             public void terminate(List<String> state) {
                 state.add("actor:one:terminated");
-                send(actorTester, new DataMessage<String>(state.get(0) + "-" + state.get(1)));
+                send(actorTester, new RawMessage<String>(state.get(0) + "-" + state.get(1)));
             }
         };
 
@@ -68,7 +63,7 @@ public class DiacoTest extends TestCase {
             @Override
             public void terminate(List<String> state) {
                 state.add("actor:two:terminated");
-                send(actorTester, new DataMessage<String>(state.get(0) + "-" + state.get(1)));
+                send(actorTester, new RawMessage<String>(state.get(0) + "-" + state.get(1)));
             }
         };
 

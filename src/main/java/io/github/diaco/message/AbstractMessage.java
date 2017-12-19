@@ -2,7 +2,7 @@ package io.github.diaco.message;
 
 import io.github.diaco.actor.Actor;
 
-abstract class AbstractMessage<BodyType> implements Message, Comparable<Message> {
+abstract class AbstractMessage<BodyType> implements Message<BodyType>, Comparable<Message> {
 
     private Actor from;
     private Actor to;
