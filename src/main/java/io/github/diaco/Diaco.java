@@ -16,7 +16,7 @@ public class Diaco {
     private static Diaco instance;
     private Scheduler scheduler;
 
-    protected Diaco() {
+    private Diaco() {
         scheduler = new Scheduler();
         scheduler.start();
     }
@@ -31,5 +31,4 @@ public class Diaco {
 
         return instance;
     }
-
 }

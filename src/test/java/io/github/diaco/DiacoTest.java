@@ -25,23 +25,23 @@ public class DiacoTest extends TestCase {
         Diaco diaco = Diaco.getInstance();
         final CountDownLatch lock = new CountDownLatch(1);
 
-        final Actor<Message<String>, String> actorTester = new RawActor<Message<String>, String>() {
+        final Actor<String> actorTester = new RawActor<String>() {
             @Override
-            public void receive(Message<String> message, State<Message<String>> state) {
-                state.getBody().add(message);
+            public void receive(Message message, State<String> state) {
+                state.getBody().add(message.getTag());
                 if(state.getBody().size() == 2) {
                     terminate(state);
                 }
             }
             @Override
-            public void terminate(State<Message<String>> state) {
-                assertEquals("actor:two:started-actor:two:terminated", state.getBody().get(0).getBody());
-                assertEquals("actor:one:started-actor:one:terminated", state.getBody().get(1).getBody());
+            public void terminate(State<String> state) {
+                assertEquals("actor:two:started-actor:two:terminated", state.getBody().get(0));
+                assertEquals("actor:one:started-actor:one:terminated", state.getBody().get(1));
                 lock.countDown();
             }
         };
 
-        Actor<String, String> actorOne = new RawActor<String, String>() {
+        Actor<String> actorOne = new RawActor<String>() {
             @Override
             public void init(State<String> state) {
                 state.getBody().add("actor:one:started");
@@ -49,11 +49,13 @@ public class DiacoTest extends TestCase {
             @Override
             public void terminate(State<String> state) {
                 state.getBody().add("actor:one:terminated");
-                send(actorTester, new Message<String>(state.getBody().get(0) + "-" + state.getBody().get(1)));
+                String tag = state.getBody().get(0) + "-" + state.getBody().get(1);
+                send(actorTester, new Message.Builder().tag(tag).build());
+
             }
         };
 
-        Actor<String, String> actorTwo = new RawActor<String, String>() {
+        Actor<String> actorTwo = new RawActor<String>() {
             @Override
             public void init(State<String> state) {
                 state.getBody().add("actor:two:started");
@@ -61,7 +63,8 @@ public class DiacoTest extends TestCase {
             @Override
             public void terminate(State<String> state) {
                 state.getBody().add("actor:two:terminated");
-                send(actorTester, new Message<String>(state.getBody().get(0) + "-" + state.getBody().get(1)));
+                String tag = state.getBody().get(0) + "-" + state.getBody().get(1);
+                send(actorTester, new Message.Builder().tag(tag).build());
             }
         };
 

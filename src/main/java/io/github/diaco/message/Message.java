@@ -2,9 +2,9 @@ package io.github.diaco.message;
 
 import io.github.diaco.actor.Actor;
 
-public class Message<BodyType> implements Comparable<Message> {
+public class Message implements Comparable<Message> {
 
-    public enum HeadType {
+    public enum Type {
         DEFAULT,
         EXIT,
         EXITED,
@@ -14,29 +14,41 @@ public class Message<BodyType> implements Comparable<Message> {
         UNMONITOR
     }
 
-    private Actor from;
-    private Actor to;
-    private BodyType body;
-    private HeadType head;
-    private Integer priority;
+    public static final int DEFAULT_PRIORITY = 1;
 
-    public Message(BodyType body) {
-        this.head = HeadType.DEFAULT;
-        this.body = body;
-        this.priority = 1;
+    private final Actor from;
+    private final Type type;
+    private final String tag;
+    private final int flag;
+    private final int priority;
+    private final byte[] body;
+
+    private Message(Builder builder) {
+        this.from = builder.from;
+        this.type = builder.type;
+        this.tag = builder.tag;
+        this.flag = builder.flag;
+        this.priority = builder.priority;
+        this.body = builder.body;
     }
 
-    public Message(HeadType head, BodyType body, Integer priority) {
-        this.head = head;
-        this.body = body;
-        this.priority = priority;
+    public Type getType() {
+        return type;
     }
 
-    public HeadType getHead() {
-        return head;
+    public String getTag() {
+        return tag;
     }
 
-    public BodyType getBody() {
+    public int getFlag() {
+        return flag;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public byte[] getBody() {
         return body;
     }
 
@@ -44,32 +56,56 @@ public class Message<BodyType> implements Comparable<Message> {
         return from;
     }
 
-    public Actor getTo() {
-        return to;
-    }
-
-    public Integer getPriority() {
-        return priority;
-    }
-
-    public void setHead(HeadType head) {
-        this.head = head;
-    }
-
-    public void setBody(BodyType body) {
-        this.body = body;
-    }
-
-    public void setFrom(Actor from) {
-        this.from = from;
-    }
-
-    public void setTo(Actor to) {
-        this.to = to;
-    }
-
     public int compareTo(Message other) {
         return this.getPriority().compareTo(other.getPriority());
     }
 
+    public static class Builder {
+
+        private Actor from;
+        private Type type;
+        private String tag;
+        private int flag;
+        private int priority;
+        private byte[] body;
+
+        public Builder() {
+            this.type = Type.DEFAULT;
+            this.priority = DEFAULT_PRIORITY;
+        }
+
+        public Builder from(Actor from) {
+            this.from = from;
+            return this;
+        }
+
+        public Builder type(Type type) {
+            this.type = type;
+            return this;
+        }
+
+        public Builder tag(String tag) {
+            this.tag = tag;
+            return this;
+        }
+
+        public Builder flag(int flag) {
+            this.flag = flag;
+            return this;
+        }
+
+        public Builder priority(int priority) {
+            this.priority = priority;
+            return this;
+        }
+
+        public Builder body(byte[] body) {
+            this.body = body;
+            return this;
+        }
+
+        public Message build() {
+            return new Message(this);
+        }
+    }
 }

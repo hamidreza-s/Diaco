@@ -18,5 +18,4 @@ public class State<StateBodyType> {
     public void setBody(List<StateBodyType> body) {
         this.body = body;
     }
-
 }
