@@ -52,4 +52,8 @@ public class Scheduler {
             }
         }).start();
     }
+
+    public void stop() {
+        // TODO: stop scheduler
+    }
 }
