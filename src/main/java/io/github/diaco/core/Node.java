@@ -11,15 +11,18 @@ import java.util.Properties;
 
 public class Node implements MessageListener<String> {
 
-    private static Node instance;
+    // TODO: check cookie
+
     private static final String NODES_NAME_MAP = "nodes-name-map";
     private ReplicatedMap<String, String> nodes;
     private String name;
-    private Node(Config config) {
+    private Config config;
 
+    public Node(Config config) {
+        this.config = config;
     }
 
-    private void start(Config config) {
+    public void start() {
         com.hazelcast.config.Config hazelcastConfig = new com.hazelcast.config.Config();
         HazelcastInstance hazelcast = Hazelcast.newHazelcastInstance(hazelcastConfig);
         name = config.getProperty(Config.NODE_NAME);
@@ -35,16 +38,11 @@ public class Node implements MessageListener<String> {
         // TODO: stop node
     }
 
-    public void onMessage(Message<String> message) {
-
+    public String getName() {
+        return name;
     }
 
-    public static Node getInstance(Config config) {
-        if(instance == null) {
-            instance = new Node(config);
-            instance.start(config);
-        }
-
-        return instance;
+    public void onMessage(Message<String> message) {
+        System.out.println("inside node / new message: " + message);
     }
 }

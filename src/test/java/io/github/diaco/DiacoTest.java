@@ -23,9 +23,9 @@ public class DiacoTest extends TestCase {
     }
 
     public void testActorLinking() throws InterruptedException {
-        Config config = Config.getConfig();
+        Config config = Config.newConfig();
 
-        Diaco diaco = Diaco.getInstance(config);
+        Diaco diaco = Diaco.newInstance(config);
         final CountDownLatch lock = new CountDownLatch(1);
 
         final Actor<String> actorTester = new RawActor<String>() {

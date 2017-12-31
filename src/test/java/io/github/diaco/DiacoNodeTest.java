@@ -22,71 +22,34 @@ public class DiacoNodeTest extends TestCase {
         return new TestSuite(DiacoNodeTest.class);
     }
 
-    public void testActorLinking() throws InterruptedException {
-        Config config = Config.getConfig();
-        config.setProperty(Config.NODE_NAME, "diaco-node-test");
-        config.setProperty(Config.NODE_COOKIE, "secret");
+    public void testNodeCommunication() throws InterruptedException {
+        Config configOne = Config.newConfig();
+        configOne.setProperty(Config.NODE_NAME, "diaco-node-test-one");
+        configOne.setProperty(Config.NODE_COOKIE, "secret");
+        Diaco diacoOne = Diaco.newInstance(configOne);
 
-        Diaco diaco = Diaco.getInstance(config);
-        final CountDownLatch lock = new CountDownLatch(1);
+        Config configTwo = Config.newConfig();
+        configTwo.setProperty(Config.NODE_NAME, "diaco-node-test-two");
+        configTwo.setProperty(Config.NODE_COOKIE, "secret");
+        Diaco diacoTwo = Diaco.newInstance(configTwo);
 
-        final Actor<String> actorTester = new RawActor<String>() {
+        final Actor<String> actorOne = new RawActor<String>() {
             @Override
             public void receive(Message message, State<String> state) {
-                state.getBody().add(message.getTag());
-                if(state.getBody().size() == 2) {
-                    terminate(state);
-                }
-            }
-            @Override
-            public void terminate(State<String> state) {
-                assertEquals("actor:two:started-actor:two:terminated", state.getBody().get(0));
-                assertEquals("actor:one:started-actor:one:terminated", state.getBody().get(1));
-                lock.countDown();
+                System.out.println("inside actor one / new message: " + message.getTag());
             }
         };
 
-        Actor<String> actorOne = new RawActor<String>() {
+        final Actor<String> actorTwo = new RawActor<String>() {
             @Override
-            public void init(State<String> state) {
-                state.getBody().add("actor:one:started");
-            };
-            @Override
-            public void terminate(State<String> state) {
-                state.getBody().add("actor:one:terminated");
-                String tag = state.getBody().get(0) + "-" + state.getBody().get(1);
-                send(actorTester, new Message.Builder().tag(tag).build());
-
+            public void receive(Message message, State<String> state) {
+                System.out.println("inside actor two / new message: " + message.getTag());
             }
         };
 
-        Actor<String> actorTwo = new RawActor<String>() {
-            @Override
-            public void init(State<String> state) {
-                state.getBody().add("actor:two:started");
-            }
-            @Override
-            public void terminate(State<String> state) {
-                state.getBody().add("actor:two:terminated");
-                String tag = state.getBody().get(0) + "-" + state.getBody().get(1);
-                send(actorTester, new Message.Builder().tag(tag).build());
-            }
-        };
+        diacoOne.spawn(actorOne);
+        diacoTwo.spawn(actorTwo);
+        actorOne.send(actorTwo, new Message.Builder().tag("test-tag").build());
 
-        diaco.spawn(actorTester);
-        diaco.spawn(actorOne);
-        diaco.spawn(actorTwo);
-
-        actorOne.link(actorTwo);
-        actorTester.exit(actorTwo);
-
-        lock.await();
-
-    }
-
-    public void testActorMonitoring() throws InterruptedException {
-    }
-
-    public void testMessagePassing() throws InterruptedException {
     }
 }

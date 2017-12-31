@@ -17,10 +17,14 @@ public class Config extends Properties {
         super(defaultConfig);
     }
 
-    public static Config getConfig() {
+    public static Config newConfig() {
         Properties defaultConfig = new Properties();
         defaultConfig.setProperty(SCHEDULER_RUN_QUEUE_SIZE, DEFAULT_SCHEDULER_RUN_QUEUE_SIZE);
         defaultConfig.setProperty(SCHEDULER_THREAD_POOL_SIZE, DEFAULT_SCHEDULER_THREAD_POOL_SIZE);
         return new Config(defaultConfig);
+    }
+
+    public static void checkRequired(Config config) {
+
     }
 }

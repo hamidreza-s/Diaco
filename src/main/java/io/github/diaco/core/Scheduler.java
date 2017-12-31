@@ -9,13 +9,14 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 public class Scheduler {
 
-    private static Scheduler instance;
     private static Integer currentActorIdentifier = 0;
     private ExecutorService executor;
     private BlockingQueue<Actor> runQueue;
+    private Config config;
 
     // TODO: collect scheduler statistics
-    private Scheduler(Config config) {
+    public Scheduler(Config config) {
+        this.config = config;
         Integer threadPoolSize = Integer.parseInt(config.getProperty(Config.SCHEDULER_THREAD_POOL_SIZE));
         Integer runQueueSize = Integer.parseInt(config.getProperty(Config.SCHEDULER_RUN_QUEUE_SIZE));
         this.executor = Executors.newFixedThreadPool(threadPoolSize);
@@ -34,7 +35,7 @@ public class Scheduler {
         return currentActorIdentifier++;
     }
 
-    private void start(Config config) {
+    public void start() {
         new Thread(new Runnable() {
             public void run() {
                 while(true) {
@@ -46,14 +47,5 @@ public class Scheduler {
                 }
             }
         }).start();
-    }
-
-    public static Scheduler getInstance(Config config) {
-        if(instance == null) {
-            instance = new Scheduler(config);
-            instance.start(config);
-        }
-
-        return instance;
     }
 }
