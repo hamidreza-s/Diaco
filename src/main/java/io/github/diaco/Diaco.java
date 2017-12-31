@@ -6,6 +6,7 @@ import io.github.diaco.core.Config;
 import io.github.diaco.actor.Actor;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class Diaco {
 
@@ -32,7 +33,14 @@ public class Diaco {
     }
 
     public void spawn(Actor actor) {
-        scheduler.spawn(actor);
+        if(node == null)
+            scheduler.spawn(actor);
+        else
+            scheduler.spawn(node, actor);
+    }
+
+    public Set<String> getNodeNames() {
+        return node.getNodes().keySet();
     }
 
     public void stop() {

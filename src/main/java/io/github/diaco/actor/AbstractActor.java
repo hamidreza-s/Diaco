@@ -1,8 +1,8 @@
 package io.github.diaco.actor;
 
+import io.github.diaco.core.Node;
 import io.github.diaco.core.Scheduler;
 import io.github.diaco.message.Message;
-
 import java.util.Map;
 import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
@@ -14,6 +14,7 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
 
     public static final int DEFAULT_PRIORITY = 0;
     public static final int DEFAULT_MAILBOX_SIZE = 1024;
+    private Node node;
     private Integer priority;
     private Integer reduction;
     private Integer identifier;
@@ -47,8 +48,13 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
     public abstract void terminate(State<StateBodyType> state);
 
     public final void send(Actor actor, Message message) {
-        AbstractActor abstractActor = (AbstractActor) actor;
-        abstractActor.putIntoMailbox(message);
+        if(actor.getNode().equals(this.getNode())) {
+            AbstractActor abstractActor = (AbstractActor) actor;
+            abstractActor.putIntoMailbox(message);
+        } else {
+            // TODO: remote actor!
+            actor.getNode().send(message);
+        }
     }
 
     private void putIntoMailbox(Message message) {
@@ -57,6 +63,10 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         } catch(InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public final void node(Node node) {
+        this.node = node;
     }
 
     public final void link(Actor actor) {
@@ -177,6 +187,10 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
 
     public Integer getIdentifier() {
         return this.identifier;
+    }
+
+    public Node getNode() {
+        return this.node;
     }
 
     public Map<Integer, Actor> listLinkedBy() {

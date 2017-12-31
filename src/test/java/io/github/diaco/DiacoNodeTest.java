@@ -5,12 +5,9 @@ import io.github.diaco.actor.RawActor;
 import io.github.diaco.actor.State;
 import io.github.diaco.core.Config;
 import io.github.diaco.message.Message;
-
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
-import java.util.concurrent.CountDownLatch;
 
 public class DiacoNodeTest extends TestCase {
 
@@ -49,7 +46,14 @@ public class DiacoNodeTest extends TestCase {
 
         diacoOne.spawn(actorOne);
         diacoTwo.spawn(actorTwo);
-        actorOne.send(actorTwo, new Message.Builder().tag("test-tag").build());
+        actorOne.send(actorTwo, new Message
+                .Builder()
+                .tag("test-tag")
+                .body(new byte[]{1, 2, 3})
+                .build());
+
+        System.out.println(diacoOne.getNodeNames());
+        System.out.println(diacoTwo.getNodeNames());
 
     }
 }

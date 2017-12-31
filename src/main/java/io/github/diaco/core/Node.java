@@ -1,20 +1,21 @@
 package io.github.diaco.core;
 
-import io.github.diaco.core.Config;
+import io.github.diaco.message.Message;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.Message;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.core.ReplicatedMap;
 import com.hazelcast.core.ITopic;
-import java.util.Properties;
+import java.util.Map;
 
-public class Node implements MessageListener<String> {
+
+public class Node implements MessageListener<byte[]> {
 
     // TODO: check cookie
 
     private static final String NODES_NAME_MAP = "nodes-name-map";
     private ReplicatedMap<String, String> nodes;
+    private ITopic<byte[]> topic;
     private String name;
     private Config config;
 
@@ -25,24 +26,33 @@ public class Node implements MessageListener<String> {
     public void start() {
         com.hazelcast.config.Config hazelcastConfig = new com.hazelcast.config.Config();
         HazelcastInstance hazelcast = Hazelcast.newHazelcastInstance(hazelcastConfig);
-        name = config.getProperty(Config.NODE_NAME);
-        nodes = hazelcast.getReplicatedMap(Node.NODES_NAME_MAP);
-        nodes.put(name, hazelcast.getName());
+        this.name = config.getProperty(Config.NODE_NAME);
+        this.nodes = hazelcast.getReplicatedMap(Node.NODES_NAME_MAP);
+        this.nodes.put(name, hazelcast.getName());
 
-        ITopic<String> topic = hazelcast.getTopic(name);
-        topic.addMessageListener(this);
+        this.topic = hazelcast.getTopic(name);
+        this.topic.addMessageListener(this);
     }
 
     public void stop() {
-        nodes.remove(name);
+        this.nodes.remove(name);
         // TODO: stop node
     }
 
-    public String getName() {
-        return name;
+    public void send(Message message) {
+        // TODO: serialize message to byte
+        this.topic.publish(message.getBody());
     }
 
-    public void onMessage(Message<String> message) {
-        System.out.println("inside node / new message: " + message);
+    public String getName() {
+        return this.name;
+    }
+
+    public Map<String, String> getNodes() {
+        return this.nodes;
+    }
+
+    public void onMessage(com.hazelcast.core.Message<byte[]> message) {
+        System.out.println("inside node / new message: " + message.getMessageObject());
     }
 }

@@ -1,6 +1,7 @@
 package io.github.diaco.message;
 
 import io.github.diaco.actor.Actor;
+import java.io.IOException;
 
 public class Message implements Comparable<Message> {
 

@@ -1,7 +1,7 @@
 package io.github.diaco.actor;
 
+import io.github.diaco.core.Node;
 import io.github.diaco.message.Message;
-
 import java.util.Map;
 
 public interface Actor<StateBodyType> extends Runnable {
@@ -23,6 +23,7 @@ public interface Actor<StateBodyType> extends Runnable {
     public void exit(Actor actor);
     public void terminate(State<StateBodyType> state);
     public void stop();
+    public void node(Node node);
 
     public Map<Integer, Actor> listLinkedBy();
     public Map<Integer, Actor> listMonitoredBy();
@@ -31,5 +32,5 @@ public interface Actor<StateBodyType> extends Runnable {
     public Integer getPriority();
     public Integer getReduction();
     public Integer getIdentifier();
-
+    public Node getNode();
 }
