@@ -1,7 +1,7 @@
 package io.github.diaco.core;
 
 import io.github.diaco.actor.Actor;
-
+import io.github.diaco.core.Config;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -9,21 +9,16 @@ import java.util.concurrent.PriorityBlockingQueue;
 
 public class Scheduler {
 
-    private static final int DEFAULT_RUN_QUEUE_SIZE = 1024;
+    private static Scheduler instance;
     private static Integer currentActorIdentifier = 0;
     private ExecutorService executor;
     private BlockingQueue<Actor> runQueue;
 
     // TODO: collect scheduler statistics
-    public Scheduler() {
-        this(
-                Runtime.getRuntime().availableProcessors(),
-                DEFAULT_RUN_QUEUE_SIZE
-        );
-    }
-
-    public Scheduler(int poolSize, int runQueueSize) {
-        this.executor = Executors.newFixedThreadPool(poolSize);
+    private Scheduler(Config config) {
+        Integer threadPoolSize = Integer.parseInt(config.getProperty(Config.SCHEDULER_THREAD_POOL_SIZE));
+        Integer runQueueSize = Integer.parseInt(config.getProperty(Config.SCHEDULER_RUN_QUEUE_SIZE));
+        this.executor = Executors.newFixedThreadPool(threadPoolSize);
         this.runQueue = new PriorityBlockingQueue<Actor>(runQueueSize);
     }
 
@@ -39,7 +34,7 @@ public class Scheduler {
         return currentActorIdentifier++;
     }
 
-    public void start() {
+    private void start(Config config) {
         new Thread(new Runnable() {
             public void run() {
                 while(true) {
@@ -53,7 +48,12 @@ public class Scheduler {
         }).start();
     }
 
-    public void stop() {
-        // TODO: stop scheduler
+    public static Scheduler getInstance(Config config) {
+        if(instance == null) {
+            instance = new Scheduler(config);
+            instance.start(config);
+        }
+
+        return instance;
     }
 }

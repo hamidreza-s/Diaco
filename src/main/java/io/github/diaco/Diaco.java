@@ -1,44 +1,36 @@
 package io.github.diaco;
 
 import io.github.diaco.core.Scheduler;
+import io.github.diaco.core.Node;
+import io.github.diaco.core.Config;
 import io.github.diaco.actor.Actor;
-import io.github.diaco.node.Node;
 
 public class Diaco {
-
-    // TODO: define core.Configuration
-
-    // TODO: define interface message.Serializer
-    // TODO: define class     message.ObjectSerializer
-
-    // TODO: define class     node.Node
-    // TODO: define class     node.Registry
 
     private static Diaco instance;
     private Scheduler scheduler;
     private Node node;
 
-    private Diaco() {
-        scheduler = new Scheduler();
-        scheduler.start();
+    private Diaco(Config config) {
+        scheduler = Scheduler.getInstance(config);
 
-        node = new Node();
-        node.start();
+        if(config.containsKey(Config.NODE_NAME))
+            node = Node.getInstance(config);
+
     }
 
     public void spawn(Actor actor) {
         scheduler.spawn(actor);
     }
 
-    public static Diaco getInstance() {
+    public static Diaco getInstance(Config config) {
         if(instance == null)
-            instance = new Diaco();
+            instance = new Diaco(config);
 
         return instance;
     }
 
     public void stop() {
-        scheduler.stop();
-        node.stop();
+        // TODO: stop scheduler and node
     }
 }

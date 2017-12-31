@@ -12,18 +12,20 @@ import junit.framework.TestSuite;
 
 import java.util.concurrent.CountDownLatch;
 
-public class DiacoTest extends TestCase {
+public class DiacoNodeTest extends TestCase {
 
-    public DiacoTest(String testName) {
+    public DiacoNodeTest(String testName) {
         super(testName);
     }
 
     public static Test suite() {
-        return new TestSuite(DiacoTest.class);
+        return new TestSuite(DiacoNodeTest.class);
     }
 
     public void testActorLinking() throws InterruptedException {
         Config config = Config.getConfig();
+        config.setProperty(Config.NODE_NAME, "diaco-node-test");
+        config.setProperty(Config.NODE_COOKIE, "secret");
 
         Diaco diaco = Diaco.getInstance(config);
         final CountDownLatch lock = new CountDownLatch(1);
