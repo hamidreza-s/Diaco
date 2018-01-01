@@ -53,5 +53,8 @@ public class DiacoRemoteTest extends TestCase {
                 .tag("test-tag")
                 .body(new byte[]{1, 2, 3})
                 .build());
+
+        diacoOne.stop();
+        diacoTwo.stop();
     }
 }

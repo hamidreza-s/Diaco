@@ -138,7 +138,7 @@ public class DiacoLocalTest extends TestCase {
         actorTesterRef.exit(actorTwoRef);
 
         lock.await();
-
+        diaco.stop();
     }
 
     public void testActorMonitoring() throws InterruptedException {
@@ -172,6 +172,7 @@ public class DiacoLocalTest extends TestCase {
         actorTwo.send(actorOne, new Message.Builder().tag("actor:two::actor:one").build());
 
         lock.await();
+        diaco.stop();
     }
 
     public void testMessagePassingWithReference() throws InterruptedException {
@@ -201,5 +202,6 @@ public class DiacoLocalTest extends TestCase {
         actorTwoRef.send(actorOneRef, new Message.Builder().tag("actor:two::actor:one").build());
 
         lock.await();
+        diaco.stop();
     }
 }
