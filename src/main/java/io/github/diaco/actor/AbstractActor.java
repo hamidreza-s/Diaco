@@ -48,11 +48,10 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
     public abstract void terminate(State<StateBodyType> state);
 
     public final void send(Actor actor, Message message) {
-        if(actor.getNode().equals(this.getNode())) {
+        if(!actor.hasNode() || actor.getNode().equals(this.getNode())) {
             AbstractActor abstractActor = (AbstractActor) actor;
             abstractActor.putIntoMailbox(message);
         } else {
-            // TODO: remote actor!
             actor.getNode().send(message);
         }
     }
@@ -65,17 +64,37 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         }
     }
 
+    private void putIntoLinkedBy(Integer actorIdentifier, Actor actor) {
+        this.linkedBy.put(actorIdentifier, actor);
+    }
+
+    private void putIntoMonitoredBy(Integer actorIdentifier, Actor actor) {
+        this.monitoredBy.put(actorIdentifier, actor);
+    }
+
+    private void removeFromLinkedBy(Integer actorIdentifier) {
+        this.linkedBy.remove(actorIdentifier);
+    }
+
+    private void removeFromMonitoredBy(Integer actorIdentifier) {
+        this.monitoredBy.remove(actorIdentifier);
+    }
+
     public final void node(Node node) {
         this.node = node;
     }
 
+    public final boolean hasNode() {
+        return !(this.node == null);
+    }
+
     public final void link(Actor actor) {
-        this.linkedBy.put(actor.getIdentifier(), actor);
+        this.putIntoLinkedBy(actor.getIdentifier(), actor);
         this.send(actor, new Message.Builder().type(Message.Type.LINK).priority(0).from(this).build());
     }
 
     public final void unlink(Actor actor) {
-        this.linkedBy.remove(actor.getIdentifier());
+        this.removeFromLinkedBy(actor.getIdentifier());
         this.send(actor, new Message.Builder().type(Message.Type.UNLINK).priority(0).from(this).build());
     }
 
@@ -109,16 +128,16 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
                     }
                     break;
                 case LINK:
-                    this.linkedBy.put(message.getFrom().getIdentifier(), message.getFrom());
+                    this.putIntoLinkedBy(message.getFrom().getIdentifier(), message.getFrom());
                     break;
                 case UNLINK:
-                    this.linkedBy.remove(message.getFrom().getIdentifier());
+                    this.removeFromLinkedBy(message.getFrom().getIdentifier());
                     break;
                 case MONITOR:
-                    this.monitoredBy.put(message.getFrom().getIdentifier(), message.getFrom());
+                    this.putIntoMonitoredBy(message.getFrom().getIdentifier(), message.getFrom());
                     break;
                 case UNMONITOR:
-                    this.monitoredBy.remove(message.getFrom().getIdentifier());
+                    this.removeFromMonitoredBy(message.getFrom().getIdentifier());
                     break;
             }
 

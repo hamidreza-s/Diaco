@@ -1,6 +1,9 @@
 package io.github.diaco.core;
 
 import io.github.diaco.actor.Actor;
+import io.github.diaco.actor.LocalReference;
+import io.github.diaco.actor.Reference;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -23,21 +26,15 @@ public class Scheduler {
         this.runQueue = new PriorityBlockingQueue<Actor>(runQueueSize);
     }
 
-    public void spawn(Node node, Actor actor) {
-        try {
-            actor.node(node);
-            runQueue.put(actor);
-        } catch(InterruptedException e) {
-            e.printStackTrace();
-        }
+    public Reference spawn(Node node, Actor actor) throws InterruptedException {
+        actor.node(node);
+        runQueue.put(actor);
+        return new LocalReference(actor);
     }
 
-    public void spawn(Actor actor) {
-        try {
-            runQueue.put(actor);
-        } catch(InterruptedException e) {
-            e.printStackTrace();
-        }
+    public Reference spawn(Actor actor) throws InterruptedException {
+        runQueue.put(actor);
+        return new LocalReference(actor);
     }
 
     public static Integer getFreeActorIdentifier() {

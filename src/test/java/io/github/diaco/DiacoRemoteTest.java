@@ -2,6 +2,7 @@ package io.github.diaco;
 
 import io.github.diaco.actor.Actor;
 import io.github.diaco.actor.RawActor;
+import io.github.diaco.actor.Reference;
 import io.github.diaco.actor.State;
 import io.github.diaco.core.Config;
 import io.github.diaco.message.Message;
@@ -9,17 +10,17 @@ import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 
-public class DiacoNodeTest extends TestCase {
+public class DiacoRemoteTest extends TestCase {
 
-    public DiacoNodeTest(String testName) {
+    public DiacoRemoteTest(String testName) {
         super(testName);
     }
 
     public static Test suite() {
-        return new TestSuite(DiacoNodeTest.class);
+        return new TestSuite(DiacoRemoteTest.class);
     }
 
-    public void testNodeCommunication() throws InterruptedException {
+    public void testRemoteCommunication() throws InterruptedException {
         Config configOne = Config.newConfig();
         configOne.setProperty(Config.NODE_NAME, "diaco-node-test-one");
         configOne.setProperty(Config.NODE_COOKIE, "secret");
@@ -44,16 +45,13 @@ public class DiacoNodeTest extends TestCase {
             }
         };
 
-        diacoOne.spawn(actorOne);
-        diacoTwo.spawn(actorTwo);
+        Reference diacoOneRef = diacoOne.spawn(actorOne);
+        Reference diacoTwoRef = diacoTwo.spawn(actorTwo);
+
         actorOne.send(actorTwo, new Message
                 .Builder()
                 .tag("test-tag")
                 .body(new byte[]{1, 2, 3})
                 .build());
-
-        System.out.println(diacoOne.getNodeNames());
-        System.out.println(diacoTwo.getNodeNames());
-
     }
 }

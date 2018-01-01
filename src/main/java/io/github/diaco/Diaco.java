@@ -1,9 +1,12 @@
 package io.github.diaco;
 
+import io.github.diaco.actor.Reference;
 import io.github.diaco.core.Scheduler;
 import io.github.diaco.core.Node;
 import io.github.diaco.core.Config;
 import io.github.diaco.actor.Actor;
+
+import java.beans.IntrospectionException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -32,15 +35,24 @@ public class Diaco {
         }
     }
 
-    public void spawn(Actor actor) {
-        if(node == null)
-            scheduler.spawn(actor);
-        else
-            scheduler.spawn(node, actor);
+    public Reference spawn(Actor actor) {
+        try {
+            if (node == null) {
+                return scheduler.spawn(actor);
+            } else {
+                return scheduler.spawn(node, actor);
+            }
+        } catch (InterruptedException e) {
+            return null;
+        }
     }
 
     public Set<String> getNodeNames() {
         return node.getNodes().keySet();
+    }
+
+    public boolean isDistributed() {
+        return !(this.node == null);
     }
 
     public void stop() {
