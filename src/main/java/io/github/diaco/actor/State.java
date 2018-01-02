@@ -5,6 +5,8 @@ import java.util.List;
 
 public class State<StateBodyType> {
 
+    // TODO: use algebraic type (composit type) for state
+
     private List<StateBodyType> body;
 
     public State() {

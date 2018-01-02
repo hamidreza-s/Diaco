@@ -12,6 +12,8 @@ import java.util.concurrent.PriorityBlockingQueue;
 public class Scheduler {
 
     // TODO: collect scheduler statistics
+    // TODO: use ExecutorService::submit and store returned Future objects
+    // TODO: check Future objects and remove dead ones from LocalReference.actorsMap
 
     private static Integer currentActorIdentifier = 0;
     private ExecutorService executor;

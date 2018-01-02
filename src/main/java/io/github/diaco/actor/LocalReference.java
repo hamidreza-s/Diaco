@@ -8,6 +8,9 @@ import java.util.Map;
 
 public class LocalReference implements Reference {
 
+    // TODO: remove dead actors from actorsMap
+    // TODO: put actor's runnable future in its reference
+
     private static Map<Integer, Actor> actorsMap = new HashMap<Integer, Actor>();
     private int actorIdentifier;
     private String nodeName;
