@@ -7,7 +7,7 @@ import com.hazelcast.core.MessageListener;
 import com.hazelcast.core.ReplicatedMap;
 import com.hazelcast.core.ITopic;
 import java.util.Map;
-
+import java.io.*;
 
 public class Node implements MessageListener<byte[]> {
 
@@ -40,8 +40,12 @@ public class Node implements MessageListener<byte[]> {
     }
 
     public void send(Message message) {
-        // TODO: serialize message to byte
-        this.topic.publish(message.getBody());
+        try {
+            byte[] byteMessage = convertToBytes(message);
+            this.topic.publish(byteMessage);
+        } catch(IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     public String getName() {
@@ -52,7 +56,28 @@ public class Node implements MessageListener<byte[]> {
         return this.nodes;
     }
 
-    public void onMessage(com.hazelcast.core.Message<byte[]> message) {
-        System.out.println("inside node / new message: " + message.getMessageObject());
+    public void onMessage(com.hazelcast.core.Message<byte[]> topicMessage) {
+        try {
+            Object objectMessage = convertFromBytes(topicMessage.getMessageObject());
+            Message message = (Message) objectMessage;
+            System.out.println("inside node / new message: " + message.getTag());
+        } catch(Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private byte[] convertToBytes(Object object) throws IOException {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             ObjectOutput out = new ObjectOutputStream(bos)) {
+            out.writeObject(object);
+            return bos.toByteArray();
+        }
+    }
+
+    private Object convertFromBytes(byte[] bytes) throws IOException, ClassNotFoundException {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             ObjectInput in = new ObjectInputStream(bis)) {
+            return in.readObject();
+        }
     }
 }

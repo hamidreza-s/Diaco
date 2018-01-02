@@ -49,10 +49,11 @@ public class DiacoRemoteTest extends TestCase {
         Reference diacoTwoRef = diacoTwo.spawn(actorTwo);
 
         actorOne.send(actorTwo, new Message
-                .Builder()
-                .tag("test-tag")
-                .body(new byte[]{1, 2, 3})
-                .build());
+                      .Builder()
+                      .from(actorOne)
+                      .tag("test-tag")
+                      .body(new byte[]{1, 2, 3})
+                      .build());
 
         diacoOne.stop();
         diacoTwo.stop();

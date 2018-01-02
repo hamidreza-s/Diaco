@@ -3,7 +3,7 @@ package io.github.diaco.message;
 import io.github.diaco.actor.Actor;
 import java.io.IOException;
 
-public class Message implements Comparable<Message> {
+public class Message implements Comparable<Message>, java.io.Serializable {
 
     public enum Type {
         DEFAULT,
@@ -17,7 +17,7 @@ public class Message implements Comparable<Message> {
 
     public static final int DEFAULT_PRIORITY = 1;
 
-    private final Actor from;
+    private final transient Actor from;
     private final Type type;
     private final String tag;
     private final int flag;
