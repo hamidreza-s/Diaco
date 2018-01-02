@@ -12,5 +12,5 @@ public interface Reference {
     public void exit(Reference reference);
     public void exited(Reference reference);
     public int getActorIdentifier();
-
+    public String getNodeName();
 }

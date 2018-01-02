@@ -11,6 +11,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Comparable<Actor> {
 
     // TODO: add API for trapExit
+    // TODO: put actor's runnable future here
 
     public static final int DEFAULT_PRIORITY = 0;
     public static final int DEFAULT_MAILBOX_SIZE = 1024;
@@ -48,11 +49,13 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
     public abstract void terminate(State<StateBodyType> state);
 
     public final void send(Actor actor, Message message) {
+        // @NOTE: this method is more performant than Reference::send for local actors
         if(!actor.hasNode() || actor.getNode().equals(this.getNode())) {
             AbstractActor abstractActor = (AbstractActor) actor;
             abstractActor.putIntoMailbox(message);
         } else {
-            actor.getNode().send(message);
+            Reference actorReference = new RemoteReference(actor.getIdentifier(), actor.getNode().getName());
+            this.getNode().send(this.getIdentifier(), actorReference, message);
         }
     }
 

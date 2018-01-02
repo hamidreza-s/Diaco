@@ -4,6 +4,8 @@ import io.github.diaco.actor.Actor;
 import io.github.diaco.actor.LocalReference;
 import io.github.diaco.actor.Reference;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

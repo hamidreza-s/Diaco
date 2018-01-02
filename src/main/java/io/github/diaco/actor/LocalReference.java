@@ -1,17 +1,11 @@
 package io.github.diaco.actor;
 
+import io.github.diaco.core.Registry;
+import io.github.diaco.core.Scheduler;
 import io.github.diaco.message.Message;
-
-import java.sql.Ref;
-import java.util.HashMap;
-import java.util.Map;
 
 public class LocalReference implements Reference {
 
-    // TODO: remove dead actors from actorsMap
-    // TODO: put actor's runnable future in its reference
-
-    private static Map<Integer, Actor> actorsMap = new HashMap<Integer, Actor>();
     private int actorIdentifier;
     private String nodeName;
 
@@ -20,48 +14,53 @@ public class LocalReference implements Reference {
         if(actor.hasNode()) {
             this.nodeName = actor.getNode().getName();
         }
-        actorsMap.put(actorIdentifier, actor);
+        Registry.addActor(actor);
     }
 
-    public void send(Reference reference, Message message) {
-        Actor recipientActor = actorsMap.get(reference.getActorIdentifier());
-        Actor senderActor = actorsMap.get(this.getActorIdentifier());
+    public LocalReference(int actorIdentifier, String nodeName) {
+        this.actorIdentifier = actorIdentifier;
+        this.nodeName = nodeName;
+    }
+
+    public final void send(Reference reference, Message message) {
+        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+        Actor senderActor = Registry.getActor(this.getActorIdentifier());
         senderActor.send(recipientActor, message);
     }
 
     public final void link(Reference reference) {
-        Actor recipientActor = actorsMap.get(reference.getActorIdentifier());
-        Actor senderActor = actorsMap.get(this.getActorIdentifier());
+        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+        Actor senderActor = Registry.getActor(this.getActorIdentifier());
         senderActor.link(recipientActor);
     }
 
     public final void unlink(Reference reference) {
-        Actor recipientActor = actorsMap.get(reference.getActorIdentifier());
-        Actor senderActor = actorsMap.get(this.getActorIdentifier());
+        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+        Actor senderActor = Registry.getActor(this.getActorIdentifier());
         senderActor.unlink(recipientActor);
     }
 
     public final void monitor(Reference reference) {
-        Actor recipientActor = actorsMap.get(reference.getActorIdentifier());
-        Actor senderActor = actorsMap.get(this.getActorIdentifier());
+        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+        Actor senderActor = Registry.getActor(this.getActorIdentifier());
         senderActor.monitor(recipientActor);
     }
 
     public final void unmonitor(Reference reference) {
-        Actor recipientActor = actorsMap.get(reference.getActorIdentifier());
-        Actor senderActor = actorsMap.get(this.getActorIdentifier());
+        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+        Actor senderActor = Registry.getActor(this.getActorIdentifier());
         senderActor.unmonitor(recipientActor);
     }
 
     public final void exit(Reference reference) {
-        Actor recipientActor = actorsMap.get(reference.getActorIdentifier());
-        Actor senderActor = actorsMap.get(this.getActorIdentifier());
+        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+        Actor senderActor = Registry.getActor(this.getActorIdentifier());
         senderActor.exit(recipientActor);
     }
 
     public final void exited(Reference reference) {
-        Actor recipientActor = actorsMap.get(reference.getActorIdentifier());
-        Actor senderActor = actorsMap.get(this.getActorIdentifier());
+        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+        Actor senderActor = Registry.getActor(this.getActorIdentifier());
         senderActor.exited(recipientActor);
     }
 
