@@ -7,6 +7,7 @@ import java.util.Map;
 public class Registry {
 
     // TODO: remove dead actors from actorsMap
+    // TODO: put actor's runnable future in its reference
 
     private static Map<Integer, Actor> actorsMap = new HashMap<Integer, Actor>();
 

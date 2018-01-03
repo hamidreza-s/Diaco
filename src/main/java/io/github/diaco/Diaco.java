@@ -6,7 +6,6 @@ import io.github.diaco.core.Node;
 import io.github.diaco.core.Config;
 import io.github.diaco.actor.Actor;
 
-import java.beans.IntrospectionException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +14,6 @@ public class Diaco {
 
     private Scheduler scheduler;
     private Node node;
-    private static Map<String, Integer> actorCounter = new HashMap<String, Integer>();
 
     private Diaco(Config config) {
         try {
@@ -23,11 +21,8 @@ public class Diaco {
 
             scheduler = new Scheduler(config);
             scheduler.start();
-
-            if (config.containsKey(Config.NODE_NAME)) {
-                node = new Node(config);
-                node.start();
-            }
+            node = new Node(config);
+            node.start();
 
         } catch(RuntimeException e) {
             e.printStackTrace();
@@ -37,11 +32,7 @@ public class Diaco {
 
     public Reference spawn(Actor actor) {
         try {
-            if (node == null) {
-                return scheduler.spawn(actor);
-            } else {
-                return scheduler.spawn(node, actor);
-            }
+            return scheduler.spawn(node, actor);
         } catch (InterruptedException e) {
             return null;
         }

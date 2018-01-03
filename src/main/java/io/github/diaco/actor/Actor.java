@@ -15,13 +15,7 @@ public interface Actor<StateBodyType> extends Runnable {
 
     public void init(State<StateBodyType> state);
     public void receive(Message message, State<StateBodyType> state);
-    public void send(Actor actor, Message message);
-    public void link(Actor actor);
-    public void unlink(Actor actor);
-    public void monitor(Actor actor);
-    public void unmonitor(Actor actor);
-    public void exit(Actor actor);
-    public void exited(Actor actor);
+    public void send(Reference reference, Message message);
     public void terminate(State<StateBodyType> state);
     public void stop();
 
@@ -36,5 +30,12 @@ public interface Actor<StateBodyType> extends Runnable {
     public boolean hasNode();
 
     // TODO: make following api private to diaco
-    public void node(Node node);
+    public void setNode(Node node);
+    public void setReference(Reference reference);
+    public void setIdentifier(int identifier);
+    public void putIntoMailbox(Message message);
+    public void putIntoLinkedBy(Integer actorIdentifier, Actor actor);
+    public void putIntoMonitoredBy(Integer actorIdentifier, Actor actor);
+    public void removeFromLinkedBy(Integer actorIdentifier);
+    public void removeFromMonitoredBy(Integer actorIdentifier);
 }

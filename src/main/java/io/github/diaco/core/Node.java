@@ -1,9 +1,6 @@
 package io.github.diaco.core;
 
-import com.hazelcast.nio.ObjectDataInput;
-import io.github.diaco.actor.LocalReference;
 import io.github.diaco.actor.Reference;
-import io.github.diaco.actor.RemoteReference;
 import io.github.diaco.message.Message;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
@@ -90,8 +87,8 @@ public class Node implements MessageListener<byte[]> {
             System.out.println("-------> body: " + message.getBody());
             System.out.println("-------> type: " + message.getType());
 
-            Reference senderRef = new RemoteReference(senderIdentifier, "todo");
-            Reference recipientRef = new LocalReference(recipientIdentifier, this.name);
+            Reference senderRef = new Reference(senderIdentifier, "local");
+            Reference recipientRef = new Reference(recipientIdentifier, this.name);
 
             senderRef.send(recipientRef, message);
 

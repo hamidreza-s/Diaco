@@ -1,11 +1,8 @@
 package io.github.diaco.core;
 
 import io.github.diaco.actor.Actor;
-import io.github.diaco.actor.LocalReference;
 import io.github.diaco.actor.Reference;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,14 +28,14 @@ public class Scheduler {
     }
 
     public Reference spawn(Node node, Actor actor) throws InterruptedException {
-        actor.node(node);
+        int identifier = getFreeActorIdentifier();
+        Reference reference = new Reference(identifier, node.getName());
+        actor.setNode(node);
+        actor.setReference(reference);
+        actor.setIdentifier(identifier);
         runQueue.put(actor);
-        return new LocalReference(actor);
-    }
-
-    public Reference spawn(Actor actor) throws InterruptedException {
-        runQueue.put(actor);
-        return new LocalReference(actor);
+        Registry.addActor(actor);
+        return reference;
     }
 
     public static Integer getFreeActorIdentifier() {
