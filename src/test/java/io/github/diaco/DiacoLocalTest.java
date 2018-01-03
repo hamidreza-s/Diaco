@@ -19,7 +19,7 @@ public class DiacoLocalTest extends TestCase {
         super(testName);
     }
 
-    public void testActorLinkingWithoutReference() throws InterruptedException {
+    public void testActorLinking() throws InterruptedException {
     }
 
     public void testActorLinkingWithReference() throws InterruptedException {
@@ -80,7 +80,7 @@ public class DiacoLocalTest extends TestCase {
         lock.await();
     }
 
-    public void testMessagePassingWithoutReference() throws InterruptedException {
+    public void testMessagePassing() throws InterruptedException {
     }
 
     public void testMessagePassingWithReference() throws InterruptedException {
@@ -112,5 +112,4 @@ public class DiacoLocalTest extends TestCase {
 
     public void testActorMonitoring() throws InterruptedException {
     }
-
 }

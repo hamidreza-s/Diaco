@@ -1,11 +1,11 @@
 package io.github.diaco.actor;
 
 import io.github.diaco.core.Registry;
-import io.github.diaco.core.Scheduler;
 import io.github.diaco.message.Envelope;
 import io.github.diaco.message.Message;
+import java.io.Serializable;
 
-public class Reference {
+public class Reference implements Serializable {
 
     // TODO: put message into envelope
     // TODO: put actor's Future here
@@ -25,16 +25,16 @@ public class Reference {
     }
 
     private void send(Actor recipientActor, Reference recipientReference, Message message) {
+        Envelope envelope = new Envelope(this, recipientReference, message);
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
         if(senderActor.getNode().equals(recipientActor.getNode())) {
-            recipientActor.putIntoMailbox(this, recipientReference, message);
+            recipientActor.putIntoMailbox(envelope);
         } else {
-            // TODO: send to remote node
+            senderActor.getNode().send(envelope);
         }
     }
 
     public final void send(Reference recipientReference, Message message) {
-        Envelope envelope = new Envelope(this, recipientReference, message);
         Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         this.send(recipientActor, recipientReference, message);
     }

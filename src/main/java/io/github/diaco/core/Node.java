@@ -1,6 +1,8 @@
 package io.github.diaco.core;
 
+import io.github.diaco.actor.Actor;
 import io.github.diaco.actor.Reference;
+import io.github.diaco.message.Envelope;
 import io.github.diaco.message.Message;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
@@ -42,17 +44,21 @@ public class Node implements MessageListener<byte[]> {
         // TODO: stop node
     }
 
-    public void send(int senderIdentifer, Reference reference, Message message) {
+    public void send(Envelope envelope) {
+        Message message = envelope.getMessage();
+        Reference senderReference = envelope.getFrom();
+        Reference recipientReference = envelope.getTo();
+
         try {
-            if(this.nodes.containsKey(reference.getNodeName())) {
+            if(this.nodes.containsKey(recipientReference.getNodeName())) {
 
-                byte[] byteMessage = convertToBytes(senderIdentifer, reference.getActorIdentifier(), message);
+                byte[] byteEnvelope = convertToBytes(envelope);
 
-                if(this.name == reference.getNodeName()) {
-                    this.topic.publish(byteMessage);
+                if(this.name == recipientReference.getNodeName()) {
+                    this.topic.publish(byteEnvelope);
                 } else {
-                    ITopic<byte[]> remoteTopic = this.hazelcast.getTopic(reference.getNodeName());
-                    remoteTopic.publish(byteMessage);
+                    ITopic<byte[]> remoteTopic = this.hazelcast.getTopic(recipientReference.getNodeName());
+                    remoteTopic.publish(byteEnvelope);
                 }
 
             } else {
@@ -74,59 +80,28 @@ public class Node implements MessageListener<byte[]> {
 
     public void onMessage(com.hazelcast.core.Message<byte[]> topicMessage) {
         try {
-            Tuple tuple = convertFromBytes(topicMessage.getMessageObject());
-            int senderIdentifier = tuple.first;
-            int recipientIdentifier = tuple.second;
-            Object objectMessage = tuple.third;
-            Message message = (Message) objectMessage;
-
-            System.out.println("===> inside node / new message:");
-            System.out.println("-------> sender-id: " + senderIdentifier);
-            System.out.println("-------> recipient-id " + recipientIdentifier);
-            System.out.println("-------> tag: " + message.getTag());
-            System.out.println("-------> body: " + message.getBody());
-            System.out.println("-------> type: " + message.getType());
-
-            Reference senderRef = new Reference(senderIdentifier, "local");
-            Reference recipientRef = new Reference(recipientIdentifier, this.name);
-
-            senderRef.send(recipientRef, message);
-
+            Object objectEnvelope = convertFromBytes(topicMessage.getMessageObject());
+            Envelope envelope = (Envelope) objectEnvelope;
+            Reference recipientReference = envelope.getTo();
+            Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
+            recipientActor.putIntoMailbox(envelope);
         } catch(Exception e) {
             e.printStackTrace();
         }
     }
 
-    private byte[] convertToBytes(int senderIdentifier, int recipientIdentifier, Object object) throws IOException {
+    private byte[] convertToBytes(Object object) throws IOException {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
              ObjectOutput out = new ObjectOutputStream(bos)) {
-            out.writeInt(senderIdentifier);
-            out.writeInt(recipientIdentifier);
             out.writeObject(object);
             return bos.toByteArray();
         }
     }
 
-    private Tuple convertFromBytes(byte[] bytes) throws IOException, ClassNotFoundException {
+    private Object convertFromBytes(byte[] bytes) throws IOException, ClassNotFoundException {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
              ObjectInput in = new ObjectInputStream(bis)) {
-            int senderIdentifier = in.readInt();
-            int recipientIdentifier = in.readInt();
-            Object object = in.readObject();
-
-            return new Tuple(senderIdentifier, recipientIdentifier, object);
-        }
-    }
-
-    private class Tuple {
-        public int first;
-        public int second;
-        public Object third;
-
-        public Tuple(int first, int second, Object third) {
-            this.first = first;
-            this.second = second;
-            this.third = third;
+            return in.readObject();
         }
     }
 }

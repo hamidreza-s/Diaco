@@ -1,6 +1,7 @@
 package io.github.diaco.actor;
 
 import io.github.diaco.core.Node;
+import io.github.diaco.message.Envelope;
 import io.github.diaco.message.Message;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public interface Actor<StateBodyType> extends Runnable {
     public void setNode(Node node);
     public void setReference(Reference reference);
     public void setIdentifier(int identifier);
-    public void putIntoMailbox(Reference from, Reference to, Message message);
+    public void putIntoMailbox(Envelope envelope);
     public void putIntoLinkedBy(Integer actorIdentifier, Reference reference);
     public void putIntoMonitoredBy(Integer actorIdentifier, Reference reference);
     public void removeFromLinkedBy(Integer actorIdentifier);

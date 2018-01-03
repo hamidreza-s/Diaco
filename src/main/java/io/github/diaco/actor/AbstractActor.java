@@ -56,9 +56,8 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         this.reference.send(reference, message);
     }
 
-    public void putIntoMailbox(Reference from, Reference to, Message message) {
+    public void putIntoMailbox(Envelope envelope) {
         try {
-            Envelope envelope = new Envelope(from, to, message);
             this.mailbox.put(envelope);
         } catch(InterruptedException e) {
             e.printStackTrace();

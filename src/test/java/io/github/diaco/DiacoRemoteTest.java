@@ -9,6 +9,7 @@ import io.github.diaco.message.Message;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+import java.util.concurrent.CountDownLatch;
 
 public class DiacoRemoteTest extends TestCase {
 
@@ -24,27 +25,48 @@ public class DiacoRemoteTest extends TestCase {
         Diaco diacoOne = DiacoTestHelper.getDiacoOneInstance();
         Diaco diacoTwo = DiacoTestHelper.getDiacoTwoInstance();
 
+        final CountDownLatch lock = new CountDownLatch(2);
+
         final Actor<String> actorOne = new RawActor<String>() {
             @Override
             public void receive(Message message, State<String> state) {
-                System.out.println("inside actor one / new message: " + message.getTag());
+                assertEquals("actor:two->actor:one", message.getTag());
+
+                byte[] expectedBody = new byte[]{4, 5, 6};
+                byte[] receivedBody = message.getBody();
+                for(int i = 0; i < receivedBody.length; i++)
+                    assertEquals(receivedBody[i], expectedBody[i]);
+                lock.countDown();
             }
         };
 
         final Actor<String> actorTwo = new RawActor<String>() {
             @Override
             public void receive(Message message, State<String> state) {
-                System.out.println("inside actor two / new message: " + message.getTag());
+                assertEquals("actor:one->actor:two", message.getTag());
+                byte[] expectedBody = new byte[]{1, 2, 3};
+                byte[] receivedBody = message.getBody();
+                for(int i = 0; i < receivedBody.length; i++)
+                    assertEquals(receivedBody[i], expectedBody[i]);
+                lock.countDown();
             }
         };
 
         Reference actorOneRef = diacoOne.spawn(actorOne);
         Reference actorTwoRef = diacoTwo.spawn(actorTwo);
 
-        actorOneRef.send(actorTwoRef, new Message
-                .Builder()
-                .tag("test-tag")
+        actorOneRef.send(actorTwoRef,
+                new Message.Builder()
+                .tag("actor:one->actor:two")
                 .body(new byte[]{1, 2, 3})
                 .build());
+
+        actorTwoRef.send(actorOneRef,
+                new Message.Builder()
+                .tag("actor:two->actor:one")
+                .body(new byte[]{4, 5, 6})
+                .build());
+
+        lock.await();
     }
 }

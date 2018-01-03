@@ -1,9 +1,8 @@
 package io.github.diaco.message;
 
-import io.github.diaco.actor.Actor;
-import java.io.IOException;
+import java.io.Serializable;
 
-public class Message implements Comparable<Message>, java.io.Serializable {
+public class Message implements Comparable<Message>, Serializable {
 
     public enum Type {
         DEFAULT,

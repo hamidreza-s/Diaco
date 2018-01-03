@@ -1,8 +1,9 @@
 package io.github.diaco.message;
 
 import io.github.diaco.actor.Reference;
+import java.io.Serializable;
 
-public class Envelope implements Comparable<Envelope> {
+public class Envelope implements Comparable<Envelope>, Serializable {
 
     private Reference from;
     private Reference to;
