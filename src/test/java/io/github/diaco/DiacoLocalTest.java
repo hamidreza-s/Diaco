@@ -15,24 +15,15 @@ import java.util.concurrent.CountDownLatch;
 
 public class DiacoLocalTest extends TestCase {
 
-    public static Diaco diaco;
-
     public DiacoLocalTest(String testName) {
         super(testName);
-    }
-
-    public static Test suite() {
-        Config config = Config.newConfig();
-        config.setProperty(Config.NODE_NAME, "diaco-local-test");
-        config.setProperty(Config.NODE_COOKIE, "secret");
-        DiacoLocalTest.diaco = Diaco.newInstance(config);
-        return new TestSuite(DiacoLocalTest.class);
     }
 
     public void testActorLinkingWithoutReference() throws InterruptedException {
     }
 
     public void testActorLinkingWithReference() throws InterruptedException {
+        Diaco diaco = DiacoTestHelper.getDiacoOneInstance();
         final CountDownLatch lock = new CountDownLatch(1);
 
         final Actor<String> actorTester = new RawActor<String>() {
@@ -80,20 +71,20 @@ public class DiacoLocalTest extends TestCase {
             }
         };
 
-        Reference actorOneRef = DiacoLocalTest.diaco.spawn(actorOne);
-        Reference actorTwoRef = DiacoLocalTest.diaco.spawn(actorTwo);
+        Reference actorOneRef = diaco.spawn(actorOne);
+        Reference actorTwoRef = diaco.spawn(actorTwo);
 
         actorOneRef.link(actorTwoRef);
         actorTesterRef.exit(actorTwoRef);
 
         lock.await();
-        DiacoLocalTest.diaco.stop();
     }
 
     public void testMessagePassingWithoutReference() throws InterruptedException {
     }
 
     public void testMessagePassingWithReference() throws InterruptedException {
+        Diaco diaco = DiacoTestHelper.getDiacoOneInstance();
         final CountDownLatch lock = new CountDownLatch(2);
 
         Actor<String> actorOne = new RawActor<String>() {
@@ -110,14 +101,13 @@ public class DiacoLocalTest extends TestCase {
             }
         };
 
-        Reference actorOneRef = DiacoLocalTest.diaco.spawn(actorOne);
-        Reference actorTwoRef = DiacoLocalTest.diaco.spawn(actorTwo);
+        Reference actorOneRef = diaco.spawn(actorOne);
+        Reference actorTwoRef = diaco.spawn(actorTwo);
 
         actorOneRef.send(actorTwoRef, new Message.Builder().tag("actor:one::actor:two").build());
         actorTwoRef.send(actorOneRef, new Message.Builder().tag("actor:two::actor:one").build());
 
         lock.await();
-        DiacoLocalTest.diaco.stop();
     }
 
     public void testActorMonitoring() throws InterruptedException {

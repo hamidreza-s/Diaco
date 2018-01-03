@@ -21,41 +21,30 @@ public class DiacoRemoteTest extends TestCase {
     }
 
     public void testRemoteCommunicationWithReference() throws InterruptedException {
-//        Config configOne = Config.newConfig();
-//        configOne.setProperty(Config.NODE_NAME, "diaco-remote-test1-one");
-//        configOne.setProperty(Config.NODE_COOKIE, "secret");
-//        Diaco diacoOne = Diaco.newInstance(configOne);
-//
-//        Config configTwo = Config.newConfig();
-//        configTwo.setProperty(Config.NODE_NAME, "diaco-remote-test1-two");
-//        configTwo.setProperty(Config.NODE_COOKIE, "secret");
-//        Diaco diacoTwo = Diaco.newInstance(configTwo);
-//
-//        final Actor<String> actorOne = new RawActor<String>() {
-//            @Override
-//            public void receive(Message message, State<String> state) {
-//                System.out.println("inside actor one / new message: " + message.getTag());
-//            }
-//        };
-//
-//        final Actor<String> actorTwo = new RawActor<String>() {
-//            @Override
-//            public void receive(Message message, State<String> state) {
-//                System.out.println("inside actor two / new message: " + message.getTag());
-//            }
-//        };
-//
-//        Reference actorOneRef = diacoOne.spawn(actorOne);
-//        Reference actorTwoRef = diacoTwo.spawn(actorTwo);
-//
-//        actorOneRef.send(actorTwoRef, new Message
-//                .Builder()
-//                .from(actorOne)
-//                .tag("test-tag")
-//                .body(new byte[]{1, 2, 3})
-//                .build());
-//
-//        diacoOne.stop();
-//        diacoTwo.stop();
+        Diaco diacoOne = DiacoTestHelper.getDiacoOneInstance();
+        Diaco diacoTwo = DiacoTestHelper.getDiacoTwoInstance();
+
+        final Actor<String> actorOne = new RawActor<String>() {
+            @Override
+            public void receive(Message message, State<String> state) {
+                System.out.println("inside actor one / new message: " + message.getTag());
+            }
+        };
+
+        final Actor<String> actorTwo = new RawActor<String>() {
+            @Override
+            public void receive(Message message, State<String> state) {
+                System.out.println("inside actor two / new message: " + message.getTag());
+            }
+        };
+
+        Reference actorOneRef = diacoOne.spawn(actorOne);
+        Reference actorTwoRef = diacoTwo.spawn(actorTwo);
+
+        actorOneRef.send(actorTwoRef, new Message
+                .Builder()
+                .tag("test-tag")
+                .body(new byte[]{1, 2, 3})
+                .build());
     }
 }
