@@ -28,6 +28,9 @@ public class Scheduler {
     }
 
     public Reference spawn(Node node, Actor actor) throws InterruptedException {
+        if(actor.getIdentifier() != null)
+            throw new RuntimeException("re-spawning actor is not allowed!");
+
         int identifier = getFreeActorIdentifier();
         Reference reference = new Reference(identifier, node.getName());
         actor.setNode(node);

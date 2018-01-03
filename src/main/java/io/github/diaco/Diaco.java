@@ -34,6 +34,7 @@ public class Diaco {
         try {
             return scheduler.spawn(node, actor);
         } catch (InterruptedException e) {
+            e.printStackTrace();
             return null;
         }
     }
