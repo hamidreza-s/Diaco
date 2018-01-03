@@ -4,11 +4,11 @@ import io.github.diaco.actor.Actor;
 import io.github.diaco.actor.RawActor;
 import io.github.diaco.actor.Reference;
 import io.github.diaco.actor.State;
-import io.github.diaco.core.Config;
 import io.github.diaco.message.Message;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
+
 import java.util.concurrent.CountDownLatch;
 
 public class DiacoRemoteTest extends TestCase {
@@ -21,7 +21,7 @@ public class DiacoRemoteTest extends TestCase {
         return new TestSuite(DiacoRemoteTest.class);
     }
 
-    public void testRemoteCommunicationWithReference() throws InterruptedException {
+    public void testRemoteMessagePassing() throws InterruptedException {
         Diaco diacoOne = DiacoTestHelper.getDiacoOneInstance();
         Diaco diacoTwo = DiacoTestHelper.getDiacoTwoInstance();
 
@@ -36,6 +36,7 @@ public class DiacoRemoteTest extends TestCase {
                 byte[] receivedBody = message.getBody();
                 for(int i = 0; i < receivedBody.length; i++)
                     assertEquals(receivedBody[i], expectedBody[i]);
+
                 lock.countDown();
             }
         };
@@ -48,6 +49,7 @@ public class DiacoRemoteTest extends TestCase {
                 byte[] receivedBody = message.getBody();
                 for(int i = 0; i < receivedBody.length; i++)
                     assertEquals(receivedBody[i], expectedBody[i]);
+
                 lock.countDown();
             }
         };
@@ -66,6 +68,66 @@ public class DiacoRemoteTest extends TestCase {
                 .tag("actor:two->actor:one")
                 .body(new byte[]{4, 5, 6})
                 .build());
+
+        lock.await();
+    }
+
+    public void testRemoteActorLinking() throws InterruptedException {
+        Diaco diacoOne = DiacoTestHelper.getDiacoOneInstance();
+        Diaco diacoTwo = DiacoTestHelper.getDiacoTwoInstance();
+        final CountDownLatch lock = new CountDownLatch(1);
+
+        final Actor<String> actorTester = new RawActor<String>() {
+            @Override
+            public void receive(Message message, State<String> state) {
+                state.getBody().add(message.getTag());
+                if(state.getBody().size() == 2) {
+                    terminate(state);
+                }
+            }
+            @Override
+            public void terminate(State<String> state) {
+                assertTrue(state.getBody().contains("actor:two:started/actor:two:terminated"));
+                assertTrue(state.getBody().contains("actor:one:started/actor:one:terminated"));
+                assertEquals(state.getBody().size(), 2);
+                lock.countDown();
+            }
+        };
+
+        final Reference actorTesterRef = diacoOne.spawn(actorTester);
+
+        Actor<String> actorOne = new RawActor<String>() {
+            @Override
+            public void init(State<String> state) {
+                state.getBody().add("actor:one:started");
+            };
+            @Override
+            public void terminate(State<String> state) {
+                state.getBody().add("actor:one:terminated");
+                String tag = state.getBody().get(0) + "/" + state.getBody().get(1);
+                send(actorTesterRef, new Message.Builder().tag(tag).build());
+
+            }
+        };
+
+        Actor<String> actorTwo = new RawActor<String>() {
+            @Override
+            public void init(State<String> state) {
+                state.getBody().add("actor:two:started");
+            }
+            @Override
+            public void terminate(State<String> state) {
+                state.getBody().add("actor:two:terminated");
+                String tag = state.getBody().get(0) + "/" + state.getBody().get(1);
+                send(actorTesterRef, new Message.Builder().tag(tag).build());
+            }
+        };
+
+        Reference actorOneRef = diacoOne.spawn(actorOne);
+        Reference actorTwoRef = diacoTwo.spawn(actorTwo);
+
+        actorOneRef.link(actorTwoRef);
+        actorTesterRef.exit(actorTwoRef);
 
         lock.await();
     }
