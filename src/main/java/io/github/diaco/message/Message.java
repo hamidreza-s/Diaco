@@ -17,7 +17,6 @@ public class Message implements Comparable<Message>, java.io.Serializable {
 
     public static final int DEFAULT_PRIORITY = 1;
 
-    private final transient Actor from;
     private final Type type;
     private final String tag;
     private final int flag;
@@ -25,7 +24,6 @@ public class Message implements Comparable<Message>, java.io.Serializable {
     private final byte[] body;
 
     private Message(Builder builder) {
-        this.from = builder.from;
         this.type = builder.type;
         this.tag = builder.tag;
         this.flag = builder.flag;
@@ -53,17 +51,12 @@ public class Message implements Comparable<Message>, java.io.Serializable {
         return body;
     }
 
-    public Actor getFrom() {
-        return from;
-    }
-
     public int compareTo(Message other) {
         return this.getPriority().compareTo(other.getPriority());
     }
 
     public static class Builder {
 
-        private Actor from;
         private Type type;
         private String tag;
         private int flag;
@@ -73,11 +66,6 @@ public class Message implements Comparable<Message>, java.io.Serializable {
         public Builder() {
             this.type = Type.DEFAULT;
             this.priority = DEFAULT_PRIORITY;
-        }
-
-        public Builder from(Actor from) {
-            this.from = from;
-            return this;
         }
 
         public Builder type(Type type) {

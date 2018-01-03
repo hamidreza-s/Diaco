@@ -2,14 +2,15 @@ package io.github.diaco.actor;
 
 import io.github.diaco.core.Registry;
 import io.github.diaco.core.Scheduler;
+import io.github.diaco.message.Envelope;
 import io.github.diaco.message.Message;
 
 public class Reference {
 
     // TODO: put message into envelope
+    // TODO: put actor's Future here
 
     private int actorIdentifier;
-    private Object actorFuture; // TODO: implement it!
     private String nodeName;
 
     public Reference(Actor actor) {
@@ -23,84 +24,86 @@ public class Reference {
         this.nodeName = nodeName;
     }
 
-    public final void send(Actor recipientActor, Message message) {
+    private void send(Actor recipientActor, Reference recipientReference, Message message) {
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
         if(senderActor.getNode().equals(recipientActor.getNode())) {
-            recipientActor.putIntoMailbox(message);
+            recipientActor.putIntoMailbox(this, recipientReference, message);
         } else {
             // TODO: send to remote node
         }
     }
 
-    public final void send(Reference reference, Message message) {
-        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
-        this.send(recipientActor, message);
+    public final void send(Reference recipientReference, Message message) {
+        Envelope envelope = new Envelope(this, recipientReference, message);
+        Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
+        this.send(recipientActor, recipientReference, message);
     }
 
-    public final void link(Reference reference) {
-        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+    public final void link(Reference recipientReference) {
+        Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
-        senderActor.putIntoLinkedBy(recipientActor.getIdentifier(), recipientActor);
-        this.send(recipientActor, new Message
+        senderActor.putIntoLinkedBy(recipientActor.getIdentifier(), recipientReference);
+        this.send(recipientActor, recipientReference,
+                new Message
                 .Builder()
                 .type(Message.Type.LINK)
                 .priority(0)
-                .from(senderActor)
                 .build());
     }
 
-    public final void unlink(Reference reference) {
-        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+    public final void unlink(Reference recipientReference) {
+        Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
-        this.send(recipientActor, new Message
+        senderActor.removeFromLinkedBy(recipientReference.getActorIdentifier());
+        this.send(recipientActor, recipientReference,
+                new Message
                 .Builder()
                 .type(Message.Type.UNLINK)
                 .priority(0)
-                .from(senderActor)
                 .build());
     }
 
-    public final void monitor(Reference reference) {
-        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+    public final void monitor(Reference recipientReference) {
+        Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
-        this.send(recipientActor, new Message
+        this.send(recipientActor, recipientReference,
+                new Message
                 .Builder()
                 .type(Message.Type.MONITOR)
                 .priority(0)
-                .from(senderActor)
                 .build());
     }
 
-    public final void unmonitor(Reference reference) {
-        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+    public final void unmonitor(Reference recipientReference) {
+        Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
-        this.send(recipientActor, new Message
+        this.send(recipientActor, recipientReference,
+                new Message
                 .Builder()
                 .type(Message.Type.UNMONITOR)
                 .priority(0)
-                .from(senderActor)
                 .build());
     }
 
-    public final void exit(Reference reference) {
-        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+    public final void exit(Reference recipientReference) {
+        Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
-        this.send(recipientActor, new Message
+        this.send(recipientActor, recipientReference,
+                new Message
                 .Builder()
                 .type(Message.Type.EXIT)
                 .priority(0)
-                .from(senderActor)
                 .build());
     }
 
-    public final void exited(Reference reference) {
-        Actor recipientActor = Registry.getActor(reference.getActorIdentifier());
+    public final void exited(Reference recipientReference) {
+        Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
-        this.send(recipientActor, new Message
+        this.send(recipientActor, recipientReference,
+                new Message
                 .Builder()
                 .type(Message.Type.EXITED)
                 .priority(0)
-                .from(senderActor)
                 .build());
     }
 

@@ -1,7 +1,7 @@
 package io.github.diaco.actor;
 
 import io.github.diaco.core.Node;
-import io.github.diaco.core.Scheduler;
+import io.github.diaco.message.Envelope;
 import io.github.diaco.message.Message;
 import java.util.Map;
 import java.util.HashMap;
@@ -23,11 +23,11 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
     private Integer reduction;
     private Integer identifier;
     private boolean trapExit;
-    private BlockingQueue<Message> mailbox;
+    private BlockingQueue<Envelope> mailbox;
     private Status status;
     private State<StateBodyType> state;
-    private Map<Integer, Actor> linkedBy;
-    private Map<Integer, Actor> monitoredBy;
+    private Map<Integer, Reference> linkedBy;
+    private Map<Integer, Reference> monitoredBy;
 
 
     protected AbstractActor() {
@@ -41,9 +41,9 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         this.reduction = 0;
         this.identifier = identifier;
         this.trapExit = false;
-        this.mailbox = new PriorityBlockingQueue<Message>(mailboxSize);
-        this.linkedBy = new HashMap<Integer, Actor>();
-        this.monitoredBy = new HashMap<Integer, Actor>();
+        this.mailbox = new PriorityBlockingQueue<Envelope>(mailboxSize);
+        this.linkedBy = new HashMap<Integer, Reference>();
+        this.monitoredBy = new HashMap<Integer, Reference>();
     }
 
     public abstract void init(State<StateBodyType> state);
@@ -56,20 +56,21 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         this.reference.send(reference, message);
     }
 
-    public void putIntoMailbox(Message message) {
+    public void putIntoMailbox(Reference from, Reference to, Message message) {
         try {
-            this.mailbox.put(message);
+            Envelope envelope = new Envelope(from, to, message);
+            this.mailbox.put(envelope);
         } catch(InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void putIntoLinkedBy(Integer actorIdentifier, Actor actor) {
-        this.linkedBy.put(actorIdentifier, actor);
+    public void putIntoLinkedBy(Integer actorIdentifier, Reference reference) {
+        this.linkedBy.put(actorIdentifier, reference);
     }
 
-    public void putIntoMonitoredBy(Integer actorIdentifier, Actor actor) {
-        this.monitoredBy.put(actorIdentifier, actor);
+    public void putIntoMonitoredBy(Integer actorIdentifier, Reference reference) {
+        this.monitoredBy.put(actorIdentifier, reference);
     }
 
     public void removeFromLinkedBy(Integer actorIdentifier) {
@@ -99,8 +100,10 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         return !(this.node == null);
     }
 
-    private void internalReceive(Message message) {
+    private void internalReceive(Envelope envelope) {
         this.status = Status.RUNNING;
+        Message message = envelope.getMessage();
+        Reference senderReference = envelope.getFrom();
 
         if(message.getPriority() == 0) {
             switch(message.getType()) {
@@ -113,16 +116,16 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
                     }
                     break;
                 case LINK:
-                    this.putIntoLinkedBy(message.getFrom().getIdentifier(), message.getFrom());
+                    this.putIntoLinkedBy(senderReference.getActorIdentifier(), senderReference);
                     break;
                 case UNLINK:
-                    this.removeFromLinkedBy(message.getFrom().getIdentifier());
+                    this.removeFromLinkedBy(senderReference.getActorIdentifier());
                     break;
                 case MONITOR:
-                    this.putIntoMonitoredBy(message.getFrom().getIdentifier(), message.getFrom());
+                    this.putIntoMonitoredBy(senderReference.getActorIdentifier(), senderReference);
                     break;
                 case UNMONITOR:
-                    this.removeFromMonitoredBy(message.getFrom().getIdentifier());
+                    this.removeFromMonitoredBy(senderReference.getActorIdentifier());
                     break;
             }
 
@@ -141,8 +144,8 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
 
         try {
             this.status = Status.WAITING;
-            Message message = mailbox.take();
-            internalReceive(message);
+            Envelope envelope = mailbox.take();
+            internalReceive(envelope);
             if(this.status == Status.RUNNING) {
                 internalLoop();
             }
@@ -153,12 +156,12 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
 
     private void internalTerminate() {
         Reference reference = new Reference(this.getIdentifier(), this.getNode().getName());
-        for(Map.Entry<Integer, Actor> entry : this.monitoredBy.entrySet()) {
-            reference.exited(new Reference(entry.getValue().getIdentifier(), entry.getValue().getNode().getName()));
+        for(Map.Entry<Integer, Reference> entry : this.monitoredBy.entrySet()) {
+            reference.exited(entry.getValue());
         }
 
-        for(Map.Entry<Integer, Actor> entry : this.linkedBy.entrySet()) {
-            reference.exit(new Reference(entry.getValue().getIdentifier(), entry.getValue().getNode().getName()));
+        for(Map.Entry<Integer, Reference> entry : this.linkedBy.entrySet()) {
+            reference.exit(entry.getValue());
         }
 
         terminate(this.state);
@@ -198,11 +201,11 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         return this.node;
     }
 
-    public Map<Integer, Actor> listLinkedBy() {
+    public Map<Integer, Reference> listLinkedBy() {
         return this.linkedBy;
     }
 
-    public Map<Integer, Actor> listMonitoredBy() {
+    public Map<Integer, Reference> listMonitoredBy() {
         return this.monitoredBy;
     }
 }

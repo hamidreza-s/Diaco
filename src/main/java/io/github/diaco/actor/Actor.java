@@ -19,8 +19,8 @@ public interface Actor<StateBodyType> extends Runnable {
     public void terminate(State<StateBodyType> state);
     public void stop();
 
-    public Map<Integer, Actor> listLinkedBy();
-    public Map<Integer, Actor> listMonitoredBy();
+    public Map<Integer, Reference> listLinkedBy();
+    public Map<Integer, Reference> listMonitoredBy();
 
     public Status getStatus();
     public Integer getPriority();
@@ -33,9 +33,9 @@ public interface Actor<StateBodyType> extends Runnable {
     public void setNode(Node node);
     public void setReference(Reference reference);
     public void setIdentifier(int identifier);
-    public void putIntoMailbox(Message message);
-    public void putIntoLinkedBy(Integer actorIdentifier, Actor actor);
-    public void putIntoMonitoredBy(Integer actorIdentifier, Actor actor);
+    public void putIntoMailbox(Reference from, Reference to, Message message);
+    public void putIntoLinkedBy(Integer actorIdentifier, Reference reference);
+    public void putIntoMonitoredBy(Integer actorIdentifier, Reference reference);
     public void removeFromLinkedBy(Integer actorIdentifier);
     public void removeFromMonitoredBy(Integer actorIdentifier);
 }
