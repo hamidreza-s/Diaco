@@ -9,6 +9,11 @@ public class DiacoTestHelper {
 
     private DiacoTestHelper() {}
 
+    public static void startDiacoInstances() {
+        getDiacoOneInstance();
+        getDiacoTwoInstance();
+    }
+
     public static Diaco getDiacoOneInstance() {
         if(diacoOne == null) {
             Config config = Config.newConfig();

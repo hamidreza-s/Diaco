@@ -5,22 +5,20 @@ import io.github.diaco.actor.RawActor;
 import io.github.diaco.actor.Reference;
 import io.github.diaco.actor.State;
 import io.github.diaco.message.Message;
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
-
 import java.util.concurrent.CountDownLatch;
+import org.junit.*;
+import org.junit.runners.MethodSorters;
+import static org.junit.Assert.*;
 
-public class DiacoRemoteTest extends TestCase {
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
+public class DiacoRemoteTest {
 
-    public DiacoRemoteTest(String testName) {
-        super(testName);
+    @BeforeClass
+    public static void startDiaco() throws InterruptedException {
+        DiacoTestHelper.startDiacoInstances();
     }
 
-    public static Test suite() {
-        return new TestSuite(DiacoRemoteTest.class);
-    }
-
+    @Test
     public void testRemoteMessagePassing() throws InterruptedException {
         Diaco diacoOne = DiacoTestHelper.getDiacoOneInstance();
         Diaco diacoTwo = DiacoTestHelper.getDiacoTwoInstance();
@@ -72,6 +70,7 @@ public class DiacoRemoteTest extends TestCase {
         lock.await();
     }
 
+    @Test
     public void testRemoteActorLinking() throws InterruptedException {
         Diaco diacoOne = DiacoTestHelper.getDiacoOneInstance();
         Diaco diacoTwo = DiacoTestHelper.getDiacoTwoInstance();
