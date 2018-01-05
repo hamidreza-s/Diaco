@@ -14,11 +14,9 @@ import static org.junit.Assert.*;
 public class DiacoLocalTest {
 
     @BeforeClass
-    public static void startDiaco() throws InterruptedException {
-        DiacoTestHelper.startDiacoInstances();
-    }
+    public static void beforeSuite() throws InterruptedException {}
 
-    @Test
+    @Ignore
     public void testLocalMessagePassing() throws InterruptedException {
         Diaco diaco = DiacoTestHelper.getDiacoOneInstance();
         final CountDownLatch lock = new CountDownLatch(2);
@@ -46,7 +44,7 @@ public class DiacoLocalTest {
         lock.await();
     }
 
-    @Test
+    @Ignore
     public void testLocalActorLinking() throws InterruptedException {
         Diaco diaco = DiacoTestHelper.getDiacoOneInstance();
         final CountDownLatch lock = new CountDownLatch(1);

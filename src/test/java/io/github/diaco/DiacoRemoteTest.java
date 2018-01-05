@@ -14,11 +14,9 @@ import static org.junit.Assert.*;
 public class DiacoRemoteTest {
 
     @BeforeClass
-    public static void startDiaco() throws InterruptedException {
-        DiacoTestHelper.startDiacoInstances();
-    }
+    public static void beforeSuite() throws InterruptedException {}
 
-    @Test
+    @Ignore
     public void testRemoteMessagePassing() throws InterruptedException {
         Diaco diacoOne = DiacoTestHelper.getDiacoOneInstance();
         Diaco diacoTwo = DiacoTestHelper.getDiacoTwoInstance();
@@ -70,7 +68,7 @@ public class DiacoRemoteTest {
         lock.await();
     }
 
-    @Test
+    @Ignore
     public void testRemoteActorLinking() throws InterruptedException {
         Diaco diacoOne = DiacoTestHelper.getDiacoOneInstance();
         Diaco diacoTwo = DiacoTestHelper.getDiacoTwoInstance();
@@ -86,7 +84,7 @@ public class DiacoRemoteTest {
             }
             @Override
             public void terminate(State<String> state) {
-                assertTrue(state.getBody().contains("actor:two:started/actor:two:terminated"));
+                    assertTrue(state.getBody().contains("actor:two:started/actor:two:terminated"));
                 assertTrue(state.getBody().contains("actor:one:started/actor:one:terminated"));
                 assertEquals(state.getBody().size(), 2);
                 lock.countDown();

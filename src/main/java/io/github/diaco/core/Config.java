@@ -24,8 +24,5 @@ public class Config extends Properties {
         return new Config(defaultConfig);
     }
 
-    public static void checkRequired(Config config) {
-        if(!config.containsKey(NODE_NAME))
-            throw new RuntimeException("node name is required!");
-    }
+    public static void checkRequired(Config config) {}
 }

@@ -23,20 +23,27 @@ public class Node implements MessageListener<byte[]> {
     private ITopic<byte[]> topic;
     private String name;
     private Config config;
+    private boolean local;
 
     public Node(Config config) {
         this.config = config;
     }
 
     public void start() {
-        com.hazelcast.config.Config hazelcastConfig = new com.hazelcast.config.Config();
-        this.hazelcast = Hazelcast.newHazelcastInstance(hazelcastConfig);
-        this.name = config.getProperty(Config.NODE_NAME);
-        this.nodes = hazelcast.getReplicatedMap(Node.NODES_NAME_MAP);
-        this.nodes.put(name, hazelcast.getName());
+        if(config.containsKey(Config.NODE_NAME)) {
+            com.hazelcast.config.Config hazelcastConfig = new com.hazelcast.config.Config();
+            this.hazelcast = Hazelcast.newHazelcastInstance(hazelcastConfig);
+            this.name = config.getProperty(Config.NODE_NAME);
+            this.local = false;
+            this.nodes = hazelcast.getReplicatedMap(Node.NODES_NAME_MAP);
+            this.nodes.put(name, hazelcast.getName());
 
-        this.topic = hazelcast.getTopic(name);
-        this.topic.addMessageListener(this);
+            this.topic = hazelcast.getTopic(name);
+            this.topic.addMessageListener(this);
+        } else {
+            this.local = true;
+            this.name = "local";
+        }
     }
 
     public void stop() {
@@ -45,6 +52,9 @@ public class Node implements MessageListener<byte[]> {
     }
 
     public void send(Envelope envelope) {
+        if(local)
+            throw new RuntimeException("node is note started!");
+
         Message message = envelope.getMessage();
         Reference senderReference = envelope.getFrom();
         Reference recipientReference = envelope.getTo();
