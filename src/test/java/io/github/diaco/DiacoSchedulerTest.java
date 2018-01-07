@@ -21,49 +21,65 @@ public class DiacoSchedulerTest {
     }
 
     @Test
-    public void testMessagePassingOrder() throws InterruptedException {
-        Config config = Config.newConfig();
-        config.setProperty(Config.SCHEDULER_THREAD_POOL_SIZE, "4");
-        Diaco diaco = Diaco.newInstance(config);
-        final CountDownLatch lock = new CountDownLatch(4);
+    public void testSimpleMessagePassing() throws InterruptedException {
+        Diaco diaco = DiacoTestHelper.getDiacoZeroInstance();
+        final CountDownLatch lock = new CountDownLatch(6);
 
         Actor<String> actorOne = new RawActor<String>() {
             public void receive(Message message, State<String> state) {
-                assertEquals("actor:two->actor:one", message.getTag());
+                assertEquals("ActorTwo->ActorOne", message.getTag());
                 lock.countDown();
             }
         };
 
         Actor<String> actorTwo = new RawActor<String>() {
             public void receive(Message message, State<String> state) {
-                assertEquals("actor:one->actor:two", message.getTag());
+                assertEquals("ActorOne->ActorTwo", message.getTag());
                 lock.countDown();
             }
         };
 
         Actor<String> actorThree = new RawActor<String>() {
             public void receive(Message message, State<String> state) {
-                assertEquals("actor:four->actor:three", message.getTag());
+                assertEquals("ActorFour->ActorThree", message.getTag());
                 lock.countDown();
             }
         };
 
         Actor<String> actorFour = new RawActor<String>() {
             public void receive(Message message, State<String> state) {
-                assertEquals("actor:three->actor:four", message.getTag());
+                assertEquals("ActorThree->ActorFour", message.getTag());
                 lock.countDown();
             }
         };
 
-        Reference actorOneRef = diaco.spawn(actorOne).setActorName("actor:one");
-        Reference actorTwoRef = diaco.spawn(actorTwo).setActorName("actor:two");
-        Reference actorThreeRef = diaco.spawn(actorThree).setActorName("actor:three");
-        Reference actorFourRef = diaco.spawn(actorFour).setActorName("actor:four");
+        Actor<String> actorFive = new RawActor<String>() {
+            public void receive(Message message, State<String> state) {
+                assertEquals("ActorSix->ActorFive", message.getTag());
+                lock.countDown();
+            }
+        };
 
-        actorOneRef.send(actorTwoRef, new Message.Builder().tag("actor:one->actor:two").build());
-        actorTwoRef.send(actorOneRef, new Message.Builder().tag("actor:two->actor:one").build());
-        actorThreeRef.send(actorFourRef, new Message.Builder().tag("actor:three->actor:four").build());
-        actorFourRef.send(actorThreeRef, new Message.Builder().tag("actor:four->actor:three").build());
+        Actor<String> actorSix = new RawActor<String>() {
+            public void receive(Message message, State<String> state) {
+                assertEquals("ActorFive->ActorSix", message.getTag());
+                lock.countDown();
+            }
+        };
+
+        Reference actorOneRef = diaco.spawn(actorOne).setActorName("ActorOne");
+        Reference actorTwoRef = diaco.spawn(actorTwo).setActorName("ActorTwo");
+        Reference actorThreeRef = diaco.spawn(actorThree).setActorName("ActorThree");
+        Reference actorFourRef = diaco.spawn(actorFour).setActorName("ActorFour");
+        Reference actorFiveRef = diaco.spawn(actorFive).setActorName("ActorFive");
+        Reference actorSixRef = diaco.spawn(actorSix).setActorName("ActorSix");
+
+        actorOneRef.send(actorTwoRef, new Message.Builder().tag("ActorOne->ActorTwo").build());
+        actorTwoRef.send(actorOneRef, new Message.Builder().tag("ActorTwo->ActorOne").build());
+        actorThreeRef.send(actorFourRef, new Message.Builder().tag("ActorThree->ActorFour").build());
+        actorFourRef.send(actorThreeRef, new Message.Builder().tag("ActorFour->ActorThree").build());
+        actorFiveRef.send(actorSixRef, new Message.Builder().tag("ActorFive->ActorSix").build());
+        actorSixRef.send(actorFiveRef, new Message.Builder().tag("ActorSix->ActorFive").build());
 
         lock.await();
     }

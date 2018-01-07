@@ -39,10 +39,11 @@ public class Scheduler {
 
         int identifier = getFreeActorIdentifier();
         Reference reference = new Reference(identifier, node.getName());
+        actor.setScheduler(this);
         actor.setNode(node);
         actor.setReference(reference);
         actor.setIdentifier(identifier);
-        runQueue.put(actor);
+        this.putIntoRunQueue(actor);
         Registry.addActor(actor);
         return reference;
     }
@@ -66,5 +67,9 @@ public class Scheduler {
 
         scheduler.setName("diaco-scheduler");
         scheduler.start();
+    }
+
+    public void putIntoRunQueue(Actor actor) throws InterruptedException {
+        this.runQueue.put(actor);
     }
 }

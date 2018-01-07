@@ -1,6 +1,7 @@
 package io.github.diaco.actor;
 
 import io.github.diaco.core.Node;
+import io.github.diaco.core.Scheduler;
 import io.github.diaco.message.Envelope;
 import io.github.diaco.message.Message;
 import java.util.Map;
@@ -16,6 +17,7 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
     public static final int DEFAULT_PRIORITY = 0;
     public static final int DEFAULT_MAILBOX_SIZE = 1024;
 
+    private Scheduler scheduler;
     private Node node;
     private Reference reference;
 
@@ -59,6 +61,7 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
     public void putIntoMailbox(Envelope envelope) {
         try {
             this.mailbox.put(envelope);
+            this.scheduler.putIntoRunQueue(this);
         } catch(InterruptedException e) {
             e.printStackTrace();
         }
@@ -78,6 +81,10 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
 
     public void removeFromMonitoredBy(Integer actorIdentifier) {
         this.monitoredBy.remove(actorIdentifier);
+    }
+
+    public final void setScheduler(Scheduler scheduler) {
+        this.scheduler = scheduler;
     }
 
     public final void setNode(Node node) {
@@ -141,15 +148,13 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
 
         reduction++;
 
-        try {
-            this.status = Status.WAITING;
-            Envelope envelope = mailbox.take();
+        this.status = Status.WAITING;
+        Envelope envelope = mailbox.poll();
+        if(envelope != null) {
             internalReceive(envelope);
-            if(this.status == Status.RUNNING) {
+            if (this.status == Status.RUNNING) {
                 internalLoop();
             }
-        } catch(InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
@@ -169,7 +174,9 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
     public void run() {
         internalInit();
         internalLoop();
-        internalTerminate();
+        if(this.status == Status.EXITING) {
+            internalTerminate();
+        }
     }
 
     public void stop() {

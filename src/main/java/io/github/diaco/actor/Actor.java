@@ -1,6 +1,7 @@
 package io.github.diaco.actor;
 
 import io.github.diaco.core.Node;
+import io.github.diaco.core.Scheduler;
 import io.github.diaco.message.Envelope;
 import io.github.diaco.message.Message;
 import java.util.Map;
@@ -31,6 +32,7 @@ public interface Actor<StateBodyType> extends Runnable {
     public boolean hasNode();
 
     // TODO: make following api private to diaco
+    public void setScheduler(Scheduler scheduler);
     public void setNode(Node node);
     public void setReference(Reference reference);
     public void setIdentifier(int identifier);

@@ -4,10 +4,23 @@ import io.github.diaco.core.Config;
 
 public class DiacoTestHelper {
 
+    private static Diaco diacoZero;
     private static Diaco diacoOne;
     private static Diaco diacoTwo;
 
     private DiacoTestHelper() {}
+
+    public static Diaco getDiacoZeroInstance() {
+        if(diacoZero == null) {
+            Config config = Config.newConfig();
+            config.setProperty(Config.SCHEDULER_THREAD_POOL_SIZE, "1");
+            diacoZero = Diaco.newInstance(config);
+            return diacoZero;
+        } else {
+            return diacoZero;
+        }
+
+    }
 
     public static Diaco getDiacoOneInstance() {
         if(diacoOne == null) {
