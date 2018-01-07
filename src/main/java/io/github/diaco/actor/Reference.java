@@ -11,6 +11,7 @@ public class Reference implements Serializable {
     // TODO: put actor's Future here
 
     private int actorIdentifier;
+    private String actorName;
     private String nodeName;
 
     public Reference(Actor actor) {
@@ -115,9 +116,16 @@ public class Reference implements Serializable {
         return this.actorIdentifier;
     }
 
+    public Reference setActorName(String name) {
+        this.actorName = name;
+        return this;
+    }
+
     @Override
     public String toString() {
-        return "<" + nodeName + "." + Integer.toString(actorIdentifier) + ">";
+        String actorName = (this.actorName == null) ? "no-name" : this.actorName;
+        return "<" + nodeName + "." + actorName + "." + Integer.toString(actorIdentifier) + ">";
+
     }
 
 }
