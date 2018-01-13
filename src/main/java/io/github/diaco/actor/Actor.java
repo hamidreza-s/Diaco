@@ -19,6 +19,7 @@ public interface Actor<StateBodyType> extends Runnable {
     public void receive(Message message, State<StateBodyType> state);
     public void send(Reference reference, Message message);
     public void terminate(State<StateBodyType> state);
+    public void exit(Reference reference);
     public void stop();
 
     public Map<Integer, Reference> listLinkedBy();
@@ -31,6 +32,7 @@ public interface Actor<StateBodyType> extends Runnable {
     public Node getNode();
     public Reference getReference();
     public boolean hasNode();
+    public boolean isAlive();
 
     // TODO: make following api private to diaco
     public void setScheduler(Scheduler scheduler);

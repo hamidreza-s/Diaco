@@ -25,6 +25,7 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
     private Integer reduction;
     private Integer identifier;
     private boolean trapExit;
+    private boolean isAlive;
     private BlockingQueue<Envelope> mailbox;
     private Status status;
     private State<StateBodyType> state;
@@ -43,6 +44,7 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         this.reduction = 0;
         this.identifier = identifier;
         this.trapExit = false;
+        this.isAlive = true;
         this.mailbox = new PriorityBlockingQueue<Envelope>(mailboxSize);
         this.linkedBy = new HashMap<Integer, Reference>();
         this.monitoredBy = new HashMap<Integer, Reference>();
@@ -54,11 +56,35 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
 
     public abstract void terminate(State<StateBodyType> state);
 
-    public final void send(Reference reference, Message message) {
+    public synchronized final void send(Reference reference, Message message) {
         this.reference.send(reference, message);
     }
 
-    public void putIntoMailbox(Envelope envelope) {
+    public synchronized final void link(Reference reference) {
+        this.reference.link(reference);
+    }
+
+    public synchronized final void unlink(Reference reference) {
+        this.reference.unlink(reference);
+    }
+
+    public synchronized final void monitor(Reference reference) {
+        this.reference.monitor(reference);
+    }
+
+    public synchronized final void unmonitor(Reference reference) {
+        this.reference.unmonitor(reference);
+    }
+
+    public synchronized final void exit(Reference reference) {
+        this.reference.exit(reference);
+    }
+
+    public synchronized final void exited(Reference reference) {
+        this.reference.exited(reference);
+    }
+
+    public synchronized void putIntoMailbox(Envelope envelope) {
         try {
             this.mailbox.put(envelope);
             this.scheduler.putIntoRunQueue(this);
@@ -67,19 +93,19 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         }
     }
 
-    public void putIntoLinkedBy(Integer actorIdentifier, Reference reference) {
+    public synchronized void putIntoLinkedBy(Integer actorIdentifier, Reference reference) {
         this.linkedBy.put(actorIdentifier, reference);
     }
 
-    public void putIntoMonitoredBy(Integer actorIdentifier, Reference reference) {
+    public synchronized void putIntoMonitoredBy(Integer actorIdentifier, Reference reference) {
         this.monitoredBy.put(actorIdentifier, reference);
     }
 
-    public void removeFromLinkedBy(Integer actorIdentifier) {
+    public synchronized void removeFromLinkedBy(Integer actorIdentifier) {
         this.linkedBy.remove(actorIdentifier);
     }
 
-    public void removeFromMonitoredBy(Integer actorIdentifier) {
+    public synchronized void removeFromMonitoredBy(Integer actorIdentifier) {
         this.monitoredBy.remove(actorIdentifier);
     }
 
@@ -106,7 +132,7 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         return !(this.node == null);
     }
 
-    private void internalReceive(Envelope envelope) {
+    private synchronized void internalReceive(Envelope envelope) {
         this.status = Status.RUNNING;
         Message message = envelope.getMessage();
         Reference senderReference = envelope.getFrom();
@@ -118,9 +144,12 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
                         receive(message, this.state);
                     } else {
                         this.status = Status.EXITING;
+                        this.isAlive = false;
                         return;
                     }
                     break;
+                case EXITED:
+                    receive(message, this.state);
                 case LINK:
                     this.putIntoLinkedBy(senderReference.getActorIdentifier(), senderReference);
                     break;
@@ -140,13 +169,15 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         }
     }
 
-    private void internalInit() {
+    private synchronized void internalInit() {
         init(this.state);
     }
 
-    private void internalLoop() {
+    private synchronized void internalLoop() {
 
         reduction++;
+
+        // TODO: check if this function is tail-recursive
 
         this.status = Status.WAITING;
         Envelope envelope = mailbox.poll();
@@ -158,7 +189,7 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         }
     }
 
-    private void internalTerminate() {
+    private synchronized void internalTerminate() {
         Reference reference = new Reference(this.getIdentifier(), this.getNode().getName());
         for(Map.Entry<Integer, Reference> entry : this.monitoredBy.entrySet()) {
             reference.exited(entry.getValue());
@@ -171,15 +202,16 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         terminate(this.state);
     }
 
-    public void run() {
+    public synchronized void run() {
         internalInit();
         internalLoop();
         if(this.status == Status.EXITING) {
             internalTerminate();
+            this.isAlive = false;
         }
     }
 
-    public void stop() {
+    public synchronized void stop() {
         this.status = Status.EXITING;
     }
 
@@ -205,6 +237,10 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
 
     public Node getNode() {
         return this.node;
+    }
+
+    public boolean isAlive() {
+        return this.isAlive;
     }
 
     public Reference getReference() {

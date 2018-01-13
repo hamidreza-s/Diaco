@@ -36,19 +36,48 @@ public class Reference implements Serializable {
     private void send(Actor recipientActor, Reference recipientReference, Message message) {
         Envelope envelope = new Envelope(this, recipientReference, message);
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
-        if(senderActor.getNode().equals(recipientActor.getNode())) {
-            recipientActor.putIntoMailbox(envelope);
+
+        // FIXME: it happens when test is running very fast
+        // Exception in thread "diaco-worker-0" java.lang.NullPointerException
+        // at io.github.diaco.actor.Reference.send(Reference.java:52)
+        // at io.github.diaco.actor.Reference.exit(Reference.java:133)
+        // at io.github.diaco.actor.AbstractActor.exit(AbstractActor.java:80)
+        // at io.github.diaco.DiacoSchedulerTest$14.init(DiacoSchedulerTest.java:213)
+        // at io.github.diaco.actor.AbstractActor.internalInit(AbstractActor.java:170)
+        // at io.github.diaco.actor.AbstractActor.run(AbstractActor.java:201)
+        // at io.github.diaco.actor.RawActor.run(RawActor.java:5)
+        // at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1161)
+        // at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+        // at java.base/java.lang.Thread.run(Thread.java:844)
+
+        // NOTE:
+        // It happens when a recipient actor is not initialized yet
+        // due to race condition between worker threads.
+        // Also, the use of isValid method checks the reference as well.
+        // The sender must check availability of recipient actor before
+        // sending a message.
+        if(recipientActor == null)
+            return;
+
+        if (senderActor.getNode().equals(recipientActor.getNode())) {
+            if(!recipientActor.isAlive() || recipientActor.getStatus() == Actor.Status.EXITING) {
+                return;
+            } else {
+                recipientActor.putIntoMailbox(envelope);
+            }
         } else {
             senderActor.getNode().send(envelope);
         }
     }
 
     public final void send(Reference recipientReference, Message message) {
+        if(!this.isValid(recipientReference)) return;
         Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         this.send(recipientActor, recipientReference, message);
     }
 
     public final void link(Reference recipientReference) {
+        if(!this.isValid(recipientReference)) return;
         Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
         senderActor.putIntoLinkedBy(recipientActor.getIdentifier(), recipientReference);
@@ -61,6 +90,7 @@ public class Reference implements Serializable {
     }
 
     public final void unlink(Reference recipientReference) {
+        if(!this.isValid(recipientReference)) return;
         Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
         senderActor.removeFromLinkedBy(recipientReference.getActorIdentifier());
@@ -73,6 +103,7 @@ public class Reference implements Serializable {
     }
 
     public final void monitor(Reference recipientReference) {
+        if(!this.isValid(recipientReference)) return;
         Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
         this.send(recipientActor, recipientReference,
@@ -84,6 +115,7 @@ public class Reference implements Serializable {
     }
 
     public final void unmonitor(Reference recipientReference) {
+        if(!this.isValid(recipientReference)) return;
         Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
         this.send(recipientActor, recipientReference,
@@ -94,7 +126,16 @@ public class Reference implements Serializable {
                 .build());
     }
 
+    private boolean isValid(Reference reference) {
+        if(reference == null) {
+            return false;
+        }
+
+        return true;
+    }
+
     public final void exit(Reference recipientReference) {
+        if(!this.isValid(recipientReference)) return;
         Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
         this.send(recipientActor, recipientReference,
@@ -106,6 +147,7 @@ public class Reference implements Serializable {
     }
 
     public final void exited(Reference recipientReference) {
+        if(!this.isValid(recipientReference)) return;
         Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
         this.send(recipientActor, recipientReference,
@@ -116,12 +158,20 @@ public class Reference implements Serializable {
                 .build());
     }
 
+    public Actor getActor() {
+        return Registry.getActor(this.getActorIdentifier());
+    }
+
     public String getNodeName() {
         return this.nodeName;
     }
 
     public int getActorIdentifier() {
         return this.actorIdentifier;
+    }
+
+    public boolean isAlive() {
+        return Registry.getActor(this.getActorIdentifier()).isAlive();
     }
 
     public Reference setActorName(String name) {

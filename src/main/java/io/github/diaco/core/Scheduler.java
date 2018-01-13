@@ -22,6 +22,7 @@ public class Scheduler {
 
     public Scheduler(Config config) {
         this.config = config;
+        Integer actorSpawningDepth = Integer.parseInt(config.getProperty(Config.ACTOR_SPAWNING_DEPTH));
         Integer threadPoolSize = Integer.parseInt(config.getProperty(Config.SCHEDULER_THREAD_POOL_SIZE));
         Integer runQueueSize = Integer.parseInt(config.getProperty(Config.SCHEDULER_RUN_QUEUE_SIZE));
 
@@ -29,7 +30,7 @@ public class Scheduler {
                 .setNameFormat("diaco-worker-%d")
                 .build();
 
-        this.executor = Executors.newFixedThreadPool(threadPoolSize, threadFactory);
+        this.executor = Executors.newFixedThreadPool(threadPoolSize + actorSpawningDepth, threadFactory);
         this.runQueue = new PriorityBlockingQueue<Actor>(runQueueSize);
     }
 

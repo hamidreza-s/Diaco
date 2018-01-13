@@ -13,7 +13,7 @@ public class DiacoTestHelper {
     public static Diaco getDiacoZeroInstance() {
         if(diacoZero == null) {
             Config config = Config.newConfig();
-            config.setProperty(Config.SCHEDULER_THREAD_POOL_SIZE, "1");
+            config.setProperty(Config.SCHEDULER_THREAD_POOL_SIZE, "2");
             diacoZero = Diaco.newInstance(config);
             return diacoZero;
         } else {
