@@ -4,6 +4,8 @@ import io.github.diaco.core.Registry;
 import io.github.diaco.message.Envelope;
 import io.github.diaco.message.Message;
 import java.io.Serializable;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class Reference implements Serializable {
 
@@ -22,6 +24,12 @@ public class Reference implements Serializable {
 
     public Reference(int actorIdentifier, String nodeName) {
         this.actorIdentifier = actorIdentifier;
+        this.nodeName = nodeName;
+    }
+
+    public Reference(int actorIdentifier, String actorName, String nodeName) {
+        this.actorIdentifier = actorIdentifier;
+        this.actorName = actorName;
         this.nodeName = nodeName;
     }
 
@@ -126,6 +134,18 @@ public class Reference implements Serializable {
         String actorName = (this.actorName == null) ? "no-name" : this.actorName;
         return "<" + nodeName + "." + actorName + "." + Integer.toString(actorIdentifier) + ">";
 
+    }
+
+    public static Reference fromString(String referenceString) {
+        Pattern pattern = Pattern.compile("<(.*)\\.(.*)\\.(\\d*)>");
+        Matcher matcher = pattern.matcher(referenceString);
+        if(matcher.find() && matcher.groupCount() == 3) {
+            String nodeName = matcher.group(1);
+            String actorName = matcher.group(2);
+            Integer actorIdentifier = Integer.parseInt(matcher.group(3));
+            return new Reference(actorIdentifier, actorName, nodeName);
+        }
+        throw new RuntimeException("bad formatted reference!");
     }
 
 }

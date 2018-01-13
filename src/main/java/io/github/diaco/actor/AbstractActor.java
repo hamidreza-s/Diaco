@@ -207,6 +207,10 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         return this.node;
     }
 
+    public Reference getReference() {
+        return this.reference;
+    }
+
     public Map<Integer, Reference> listLinkedBy() {
         return this.linkedBy;
     }

@@ -1,6 +1,7 @@
 package io.github.diaco;
 
 import com.hazelcast.map.impl.InterceptorRegistry;
+import com.hazelcast.map.impl.querycache.subscriber.record.ObjectQueryCacheRecordFactory;
 import io.github.diaco.core.Config;
 import io.github.diaco.actor.Actor;
 import io.github.diaco.actor.RawActor;
@@ -17,18 +18,42 @@ import static org.junit.Assert.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DiacoSchedulerTest {
 
+    private static Diaco diaco;
+
     @BeforeClass
     public static void beforeSuite() throws InterruptedException {
+        diaco = DiacoTestHelper.getDiacoZeroInstance();
     }
 
     @Test
     public void testEchoMessagePassing() throws InterruptedException {
+        final CountDownLatch lock = new CountDownLatch(1);
+        Actor<Object> actorEchoing = new RawActor<Object>() {
+            public void receive(Message message, State<Object> state) {
+                Reference senderActor = Reference.fromString(message.getFrom());
+                String senderTag = message.getTag();
+                send(senderActor, new Message.Builder().tag(senderTag).build());
+            }
+        };
 
+        final Reference actorEchoingRef = diaco.spawn(actorEchoing);
+
+        diaco.spawn(new RawActor<Object>() {
+            public String echo = "foo";
+            public void init(State<Object> state) {
+                send(actorEchoingRef, new Message.Builder().tag(echo).from(this.getReference().toString()).build());
+            }
+            public void receive(Message message, State<Object> state) {
+                assertEquals(message.getTag(), echo);
+                lock.countDown();
+            }
+        });
+
+        lock.await();
     }
 
     @Test
     public void testMassiveMessagePassing() throws InterruptedException {
-        Diaco diaco = DiacoTestHelper.getDiacoZeroInstance();
         final Integer messageNumber = 1000;
         final CountDownLatch lockOne = new CountDownLatch(messageNumber);
         final CountDownLatch lockTwo = new CountDownLatch(messageNumber);
@@ -63,7 +88,6 @@ public class DiacoSchedulerTest {
 
     @Test
     public void testConcurrentMessagePassing() throws InterruptedException {
-        Diaco diaco = DiacoTestHelper.getDiacoZeroInstance();
         final CountDownLatch lock = new CountDownLatch(6);
 
         Actor<String> actorOne = new RawActor<String>() {

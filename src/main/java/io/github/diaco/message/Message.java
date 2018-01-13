@@ -17,6 +17,7 @@ public class Message implements Comparable<Message>, Serializable {
     public static final int DEFAULT_PRIORITY = 1;
 
     private final Type type;
+    private final String from;
     private final String tag;
     private final int flag;
     private final int priority;
@@ -24,6 +25,7 @@ public class Message implements Comparable<Message>, Serializable {
 
     private Message(Builder builder) {
         this.type = builder.type;
+        this.from = builder.from;
         this.tag = builder.tag;
         this.flag = builder.flag;
         this.priority = builder.priority;
@@ -32,6 +34,10 @@ public class Message implements Comparable<Message>, Serializable {
 
     public Type getType() {
         return type;
+    }
+
+    public String getFrom() {
+        return from;
     }
 
     public String getTag() {
@@ -57,6 +63,7 @@ public class Message implements Comparable<Message>, Serializable {
     public static class Builder {
 
         private Type type;
+        private String from;
         private String tag;
         private int flag;
         private int priority;
@@ -69,6 +76,11 @@ public class Message implements Comparable<Message>, Serializable {
 
         public Builder type(Type type) {
             this.type = type;
+            return this;
+        }
+
+        public Builder from(String from) {
+            this.from = from;
             return this;
         }
 

@@ -29,6 +29,7 @@ public interface Actor<StateBodyType> extends Runnable {
     public Integer getReduction();
     public Integer getIdentifier();
     public Node getNode();
+    public Reference getReference();
     public boolean hasNode();
 
     // TODO: make following api private to diaco
