@@ -1,5 +1,6 @@
 package io.github.diaco;
 
+import com.hazelcast.map.impl.InterceptorRegistry;
 import io.github.diaco.core.Config;
 import io.github.diaco.actor.Actor;
 import io.github.diaco.actor.RawActor;
@@ -21,7 +22,47 @@ public class DiacoSchedulerTest {
     }
 
     @Test
-    public void testSimpleMessagePassing() throws InterruptedException {
+    public void testEchoMessagePassing() throws InterruptedException {
+
+    }
+
+    @Test
+    public void testMassiveMessagePassing() throws InterruptedException {
+        Diaco diaco = DiacoTestHelper.getDiacoZeroInstance();
+        final Integer messageNumber = 1000;
+        final CountDownLatch lockOne = new CountDownLatch(messageNumber);
+        final CountDownLatch lockTwo = new CountDownLatch(messageNumber);
+
+        Actor<Object> actorOne = new RawActor<Object>() {
+            public void receive(Message message, State<Object> state) {
+                lockOne.countDown();
+            }
+        };
+
+        Actor<Object> actorTwo = new RawActor<Object>() {
+            public void receive(Message message, State<Object> state) {
+                lockTwo.countDown();
+            }
+        };
+
+        final Reference actorOneRef = diaco.spawn(actorOne);
+        final Reference actorTwoRef = diaco.spawn(actorTwo);
+
+        diaco.spawn(new RawActor<Object>() {
+            public void init(State<Object> state) {
+                for(int i = 0; i < messageNumber; i++) {
+                    send(actorOneRef, new Message.Builder().build());
+                    send(actorTwoRef, new Message.Builder().build());
+                }
+            }
+        });
+
+        lockOne.await();
+        lockTwo.await();
+    }
+
+    @Test
+    public void testConcurrentMessagePassing() throws InterruptedException {
         Diaco diaco = DiacoTestHelper.getDiacoZeroInstance();
         final CountDownLatch lock = new CountDownLatch(6);
 
@@ -82,5 +123,15 @@ public class DiacoSchedulerTest {
         actorSixRef.send(actorFiveRef, new Message.Builder().tag("ActorSix->ActorFive").build());
 
         lock.await();
+    }
+
+    @Test
+    public void testActorLinking() throws InterruptedException {
+
+    }
+
+    @Test
+    public void testActorMonitoring() throws InterruptedException {
+
     }
 }
