@@ -206,7 +206,10 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
     }
 
     public synchronized void run() {
-        internalInit();
+        if(this.status == Status.STARTING) {
+            internalInit();
+            this.isAlive = true;
+        }
         internalLoop();
         if(this.status == Status.EXITING) {
             internalTerminate();
@@ -216,6 +219,7 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
 
     public synchronized void stop() {
         this.status = Status.EXITING;
+        this.isAlive = false;
     }
 
     public int compareTo(Actor other) {
