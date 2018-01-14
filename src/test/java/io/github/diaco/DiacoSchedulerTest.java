@@ -186,7 +186,6 @@ public class DiacoSchedulerTest {
                 Reference actorOneRef = diaco.spawn(new RawActor<Object>() {
                     @Override
                     public void terminate(State<Object> state) {
-                        getReference().setActorName("actor-one");
                         innerLock.countDown();
                     }
                 });
@@ -194,7 +193,6 @@ public class DiacoSchedulerTest {
                 Reference actorTwoRef = diaco.spawn(new RawActor<Object>() {
                     @Override
                     public void terminate(State<Object> state) {
-                        getReference().setActorName("actor-two");
                         innerLock.countDown();
                     }
                 });
@@ -216,7 +214,41 @@ public class DiacoSchedulerTest {
 
     @Test
     public void testActorMonitoring() throws InterruptedException {
+        final CountDownLatch outerLock = new CountDownLatch(1);
 
+        diaco.spawn(new RawActor<Object>() {
+            @Override
+            public void init(State<Object> state) {
+
+                final CountDownLatch innerLock = new CountDownLatch(2);
+
+                Reference actorOneRef = diaco.spawn(new RawActor<Object>() {
+                    @Override
+                    public void receive(Message message, State<Object> state) {
+                        assertEquals(Message.Type.EXITED, message.getType());
+                        innerLock.countDown();
+                    }
+                });
+
+                Reference actorTwoRef = diaco.spawn(new RawActor<Object>() {
+                    @Override
+                    public void terminate(State<Object> state) {
+                        innerLock.countDown();
+                    }
+                });
+
+                actorOneRef.monitor(actorTwoRef);
+                exit(actorTwoRef);
+
+                try { innerLock.await(); } catch(InterruptedException e) { e.printStackTrace(); }
+
+                assertFalse(actorTwoRef.isAlive());
+
+                outerLock.countDown();
+            }
+        });
+
+        outerLock.await();
     }
 
     @Test

@@ -149,7 +149,10 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
                     }
                     break;
                 case EXITED:
-                    receive(message, this.state);
+                    receive(new Message.Builder()
+                            .type(Message.Type.EXITED)
+                            .from(senderReference.toString())
+                            .build(), this.state);
                 case LINK:
                     this.putIntoLinkedBy(senderReference.getActorIdentifier(), senderReference);
                     break;
