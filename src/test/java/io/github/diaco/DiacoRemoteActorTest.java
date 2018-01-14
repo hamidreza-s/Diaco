@@ -11,7 +11,7 @@ import org.junit.runners.MethodSorters;
 import static org.junit.Assert.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class DiacoRemoteTest {
+public class DiacoRemoteActorTest {
 
     @BeforeClass
     public static void beforeSuite() throws InterruptedException {}

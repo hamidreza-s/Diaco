@@ -14,6 +14,7 @@ public class Scheduler {
     // TODO: collect scheduler statistics
     // TODO: use ExecutorService::submit and store returned Future objects
     // TODO: check Future objects and remove dead ones from LocalReference.actorsMap
+    // TODO: implement guava's thread-factory in diaco, then remove its package from depsk
 
     private static Integer currentActorIdentifier = 0;
     private ExecutorService executor;
@@ -37,6 +38,8 @@ public class Scheduler {
     public Reference spawn(Node node, Actor actor) throws InterruptedException {
         if(actor.getIdentifier() != null)
             throw new RuntimeException("re-spawning actor is not allowed!");
+
+        // @NOTE: puttin actor into run-queue must be the last thing
 
         int identifier = getFreeActorIdentifier();
         Reference reference = new Reference(identifier, node.getName());

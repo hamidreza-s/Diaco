@@ -5,10 +5,9 @@ import io.github.diaco.core.Scheduler;
 import io.github.diaco.core.Node;
 import io.github.diaco.core.Config;
 import io.github.diaco.actor.Actor;
-
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
+
+// TODO: implement a shell class for REPL
 
 public class Diaco {
 
