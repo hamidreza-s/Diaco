@@ -114,7 +114,6 @@ public class DiacoLocalActorTest {
         lockTwo.await();
     }
 
-
     @Test
     public void testActorLinking() throws InterruptedException {
         final CountDownLatch outerLock = new CountDownLatch(1);
@@ -192,7 +191,6 @@ public class DiacoLocalActorTest {
 
         outerLock.await();
     }
-
 
     @Test
     public void testActorState() throws InterruptedException {

@@ -14,6 +14,7 @@ public class DiacoTestHelper {
         if(diacoZero == null) {
             Config config = Config.newConfig();
             config.setProperty(Config.SCHEDULER_THREAD_POOL_SIZE, "2");
+            config.setProperty(Config.ACTOR_SPAWNING_DEPTH, "2");
             diacoZero = Diaco.newInstance(config);
             return diacoZero;
         } else {
@@ -25,6 +26,8 @@ public class DiacoTestHelper {
     public static Diaco getDiacoOneInstance() {
         if(diacoOne == null) {
             Config config = Config.newConfig();
+            config.setProperty(Config.SCHEDULER_THREAD_POOL_SIZE, "2");
+            config.setProperty(Config.ACTOR_SPAWNING_DEPTH, "2");
             config.setProperty(Config.NODE_NAME, "diaco-one");
             config.setProperty(Config.NODE_COOKIE, "secret");
             diacoOne = Diaco.newInstance(config);
@@ -37,6 +40,8 @@ public class DiacoTestHelper {
     public static Diaco getDiacoTwoInstance() {
         if(diacoTwo == null) {
             Config config = Config.newConfig();
+            config.setProperty(Config.SCHEDULER_THREAD_POOL_SIZE, "2");
+            config.setProperty(Config.ACTOR_SPAWNING_DEPTH, "2");
             config.setProperty(Config.NODE_NAME, "diaco-two");
             config.setProperty(Config.NODE_COOKIE, "secret");
             diacoTwo = Diaco.newInstance(config);

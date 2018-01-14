@@ -5,6 +5,8 @@ import io.github.diaco.actor.RawActor;
 import io.github.diaco.actor.Reference;
 import io.github.diaco.actor.State;
 import io.github.diaco.message.Message;
+
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
@@ -13,119 +15,231 @@ import static org.junit.Assert.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DiacoRemoteActorTest {
 
+    private static Diaco diacoOne;
+    private static Diaco diacoTwo;
+
     @BeforeClass
-    public static void beforeSuite() throws InterruptedException {}
-
-    @Ignore
-    public void testRemoteMessagePassing() throws InterruptedException {
-        Diaco diacoOne = DiacoTestHelper.getDiacoOneInstance();
-        Diaco diacoTwo = DiacoTestHelper.getDiacoTwoInstance();
-
-        final CountDownLatch lock = new CountDownLatch(2);
-
-        final Actor<String> actorOne = new RawActor<String>() {
-            @Override
-            public void receive(Message message, State<String> state) {
-                assertEquals("actor:two->actor:one", message.getTag());
-
-                byte[] expectedBody = new byte[]{4, 5, 6};
-                byte[] receivedBody = message.getBody();
-                for(int i = 0; i < receivedBody.length; i++)
-                    assertEquals(receivedBody[i], expectedBody[i]);
-
-                lock.countDown();
-            }
-        };
-
-        final Actor<String> actorTwo = new RawActor<String>() {
-            @Override
-            public void receive(Message message, State<String> state) {
-                assertEquals("actor:one->actor:two", message.getTag());
-                byte[] expectedBody = new byte[]{1, 2, 3};
-                byte[] receivedBody = message.getBody();
-                for(int i = 0; i < receivedBody.length; i++)
-                    assertEquals(receivedBody[i], expectedBody[i]);
-
-                lock.countDown();
-            }
-        };
-
-        Reference actorOneRef = diacoOne.spawn(actorOne);
-        Reference actorTwoRef = diacoTwo.spawn(actorTwo);
-
-        actorOneRef.send(actorTwoRef,
-                new Message.Builder()
-                .tag("actor:one->actor:two")
-                .body(new byte[]{1, 2, 3})
-                .build());
-
-        actorTwoRef.send(actorOneRef,
-                new Message.Builder()
-                .tag("actor:two->actor:one")
-                .body(new byte[]{4, 5, 6})
-                .build());
-
-        lock.await();
+    public static void beforeSuite() throws InterruptedException {
+        diacoOne = DiacoTestHelper.getDiacoOneInstance();
+        diacoTwo = DiacoTestHelper.getDiacoTwoInstance();
     }
 
-    @Ignore
-    public void testRemoteActorLinking() throws InterruptedException {
-        Diaco diacoOne = DiacoTestHelper.getDiacoOneInstance();
-        Diaco diacoTwo = DiacoTestHelper.getDiacoTwoInstance();
-        final CountDownLatch lock = new CountDownLatch(1);
-
-        final Actor<String> actorTester = new RawActor<String>() {
-            @Override
-            public void receive(Message message, State<String> state) {
-                state.getBody().add(message.getTag());
-                if(state.getBody().size() == 2) {
-                    terminate(state);
-                }
-            }
-            @Override
-            public void terminate(State<String> state) {
-                    assertTrue(state.getBody().contains("actor:two:started/actor:two:terminated"));
-                assertTrue(state.getBody().contains("actor:one:started/actor:one:terminated"));
-                assertEquals(state.getBody().size(), 2);
-                lock.countDown();
-            }
-        };
-
-        final Reference actorTesterRef = diacoOne.spawn(actorTester);
+    @Test
+    public void testSimpleMessagePassing() throws InterruptedException {
+        final CountDownLatch lock = new CountDownLatch(2);
 
         Actor<String> actorOne = new RawActor<String>() {
-            @Override
-            public void init(State<String> state) {
-                state.getBody().add("actor:one:started");
-            };
-            @Override
-            public void terminate(State<String> state) {
-                state.getBody().add("actor:one:terminated");
-                String tag = state.getBody().get(0) + "/" + state.getBody().get(1);
-                send(actorTesterRef, new Message.Builder().tag(tag).build());
-
+            public void receive(Message message, State<String> state) {
+                assertEquals("ActorTwo->ActorOne", message.getTag());
+                lock.countDown();
             }
         };
 
         Actor<String> actorTwo = new RawActor<String>() {
-            @Override
-            public void init(State<String> state) {
-                state.getBody().add("actor:two:started");
-            }
-            @Override
-            public void terminate(State<String> state) {
-                state.getBody().add("actor:two:terminated");
-                String tag = state.getBody().get(0) + "/" + state.getBody().get(1);
-                send(actorTesterRef, new Message.Builder().tag(tag).build());
+            public void receive(Message message, State<String> state) {
+                assertEquals("ActorOne->ActorTwo", message.getTag());
+                lock.countDown();
             }
         };
 
         Reference actorOneRef = diacoOne.spawn(actorOne);
         Reference actorTwoRef = diacoTwo.spawn(actorTwo);
 
-        actorOneRef.link(actorTwoRef);
-        actorTesterRef.exit(actorTwoRef);
+        actorOneRef.send(actorTwoRef, new Message.Builder().tag("ActorOne->ActorTwo").build());
+        actorTwoRef.send(actorOneRef, new Message.Builder().tag("ActorTwo->ActorOne").build());
 
         lock.await();
+    }
+
+    @Test
+    public void testEchoMessagePassing() throws InterruptedException {
+        final CountDownLatch lock = new CountDownLatch(1);
+        Actor<Object> actorEchoing = new RawActor<Object>() {
+            public void receive(Message message, State<Object> state) {
+                Reference senderActor = Reference.fromString(message.getFrom());
+                String senderTag = message.getTag();
+                send(senderActor, new Message.Builder().tag(senderTag).build());
+            }
+        };
+
+        final Reference actorEchoingRef = diacoOne.spawn(actorEchoing);
+
+        diacoTwo.spawn(new RawActor<Object>() {
+            private String echo = "foo";
+            public void init(State<Object> state) {
+                send(actorEchoingRef, new Message.Builder().tag(echo).from(this.getReference().toString()).build());
+            }
+            public void receive(Message message, State<Object> state) {
+                assertEquals(message.getTag(), echo);
+                lock.countDown();
+            }
+        });
+
+        lock.await();
+    }
+
+    @Test
+    public void testMassiveMessagePassing() throws InterruptedException {
+        final Integer messageNumber = 1000;
+        final CountDownLatch lockOne = new CountDownLatch(messageNumber);
+        final CountDownLatch lockTwo = new CountDownLatch(messageNumber);
+
+        Actor<Object> actorOne = new RawActor<Object>() {
+            @Override
+            public void receive(Message message, State<Object> state) {
+                lockOne.countDown();
+            }
+        };
+
+        Actor<Object> actorTwo = new RawActor<Object>() {
+            @Override
+            public void receive(Message message, State<Object> state) {
+                lockTwo.countDown();
+            }
+        };
+
+        final Reference actorOneRef = diacoOne.spawn(actorOne);
+        final Reference actorTwoRef = diacoOne.spawn(actorTwo);
+
+        diacoTwo.spawn(new RawActor<Object>() {
+            @Override
+            public void init(State<Object> state) {
+                for(int i = 0; i < messageNumber; i++) {
+                    send(actorOneRef, new Message.Builder().build());
+                    send(actorTwoRef, new Message.Builder().build());
+                }
+            }
+        });
+
+        lockOne.await();
+        lockTwo.await();
+    }
+
+    @Test
+    public void testActorLinking() throws InterruptedException {
+        final CountDownLatch outerLock = new CountDownLatch(1);
+
+        diacoOne.spawn(new RawActor<Object>() {
+            @Override
+            public void init(State<Object> state) {
+
+                final CountDownLatch innerLock = new CountDownLatch(2);
+
+                Reference actorOneRef = diacoTwo.spawn(new RawActor<Object>() {
+                    @Override
+                    public void terminate(State<Object> state) {
+                        innerLock.countDown();
+                    }
+                });
+
+                Reference actorTwoRef = diacoTwo.spawn(new RawActor<Object>() {
+                    @Override
+                    public void terminate(State<Object> state) {
+                        innerLock.countDown();
+                    }
+                });
+
+                actorOneRef.link(actorTwoRef);
+                exit(actorTwoRef);
+
+                try { innerLock.await(); } catch(InterruptedException e) { e.printStackTrace(); }
+
+                assertFalse(actorTwoRef.isAlive());
+                assertFalse(actorOneRef.isAlive());
+
+                outerLock.countDown();
+            }
+        });
+
+        outerLock.await();
+    }
+
+    @Test
+    public void testActorMonitoring() throws InterruptedException {
+        final CountDownLatch outerLock = new CountDownLatch(1);
+
+        diacoOne.spawn(new RawActor<Object>() {
+            @Override
+            public void init(State<Object> state) {
+
+                final CountDownLatch innerLock = new CountDownLatch(2);
+
+                Reference actorOneRef = diacoTwo.spawn(new RawActor<Object>() {
+                    @Override
+                    public void receive(Message message, State<Object> state) {
+                        assertEquals(Message.Type.EXITED, message.getType());
+                        innerLock.countDown();
+                    }
+                });
+
+                Reference actorTwoRef = diacoTwo.spawn(new RawActor<Object>() {
+                    @Override
+                    public void terminate(State<Object> state) {
+                        innerLock.countDown();
+                    }
+                });
+
+                actorOneRef.monitor(actorTwoRef);
+                exit(actorTwoRef);
+
+                try { innerLock.await(); } catch(InterruptedException e) { e.printStackTrace(); }
+
+                assertFalse(actorTwoRef.isAlive());
+
+                outerLock.countDown();
+            }
+        });
+
+        outerLock.await();
+    }
+
+    @Test
+    public void testActorState() throws InterruptedException {
+        final CountDownLatch outerLock = new CountDownLatch(1);
+
+        diacoOne.spawn(new RawActor<Object>() {
+            @Override
+            public void init(State<Object> state) {
+                final CountDownLatch innerLock = new CountDownLatch(1);
+
+                Reference actorTarget = diacoTwo.spawn(new RawActor<String>() {
+                    @Override
+                    public void init(State<String> state) {
+                        List<String> stateBody = state.getBody();
+                        stateBody.add("Init");
+                        state.setBody(stateBody);
+                    }
+
+                    @Override
+                    public void receive(Message message, State<String> state) {
+                        List<String> stateBody = state.getBody();
+                        stateBody.add("Recv");
+                        state.setBody(stateBody);
+                        if(state.getBody().size() == 4)
+                            stop();
+                    }
+
+                    @Override
+                    public void terminate(State<String> state) {
+                        assertEquals("Init", state.getBody().get(0));
+                        assertEquals("Recv", state.getBody().get(1));
+                        assertEquals("Recv", state.getBody().get(2));
+                        assertEquals("Recv", state.getBody().get(3));
+                        innerLock.countDown();
+                    }
+                });
+
+                for(int i = 0; i < 3; i++) {
+                    send(actorTarget, new Message.Builder().build());
+                }
+
+                try { innerLock.await(); } catch(InterruptedException e) { e.printStackTrace(); }
+
+                outerLock.countDown();
+            }
+        });
+
+        outerLock.await();
+
     }
 }
