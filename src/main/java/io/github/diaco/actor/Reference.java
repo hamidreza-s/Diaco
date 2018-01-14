@@ -37,19 +37,6 @@ public class Reference implements Serializable {
         Envelope envelope = new Envelope(this, recipientReference, message);
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
 
-        // FIXME: it happens when test is running very fast
-        // Exception in thread "diaco-worker-0" java.lang.NullPointerException
-        // at io.github.diaco.actor.Reference.send(Reference.java:52)
-        // at io.github.diaco.actor.Reference.exit(Reference.java:133)
-        // at io.github.diaco.actor.AbstractActor.exit(AbstractActor.java:80)
-        // at io.github.diaco.DiacoSchedulerTest$14.init(DiacoSchedulerTest.java:213)
-        // at io.github.diaco.actor.AbstractActor.internalInit(AbstractActor.java:170)
-        // at io.github.diaco.actor.AbstractActor.run(AbstractActor.java:201)
-        // at io.github.diaco.actor.RawActor.run(RawActor.java:5)
-        // at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1161)
-        // at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
-        // at java.base/java.lang.Thread.run(Thread.java:844)
-
         // NOTE:
         // It happens when a recipient actor is not initialized yet
         // due to race condition between worker threads.

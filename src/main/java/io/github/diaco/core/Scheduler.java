@@ -44,8 +44,8 @@ public class Scheduler {
         actor.setNode(node);
         actor.setReference(reference);
         actor.setIdentifier(identifier);
-        this.putIntoRunQueue(actor);
         Registry.addActor(actor);
+        this.putIntoRunQueue(actor);
         return reference;
     }
 
