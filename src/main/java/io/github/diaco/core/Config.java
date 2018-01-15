@@ -9,6 +9,7 @@ public class Config extends Properties {
     public static String SCHEDULER_THREAD_POOL_SIZE = "scheduler-thread-pool-size";
     public static String NODE_NAME = "node-name";
     public static String NODE_COOKIE = "node-cookie";
+    public static String NODE_MEMBERS = "node-members";
 
     private static String DEFAULT_ACTOR_SPAWNING_DEPTH = "2";
     private static String DEFAULT_SCHEDULER_RUN_QUEUE_SIZE = "1024";

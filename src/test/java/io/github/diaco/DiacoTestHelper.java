@@ -30,6 +30,7 @@ public class DiacoTestHelper {
             config.setProperty(Config.ACTOR_SPAWNING_DEPTH, "2");
             config.setProperty(Config.NODE_NAME, "diaco-one");
             config.setProperty(Config.NODE_COOKIE, "secret");
+            config.setProperty(Config.NODE_MEMBERS, "localhost");
             diacoOne = Diaco.newInstance(config);
             return diacoOne;
         } else {
@@ -44,6 +45,7 @@ public class DiacoTestHelper {
             config.setProperty(Config.ACTOR_SPAWNING_DEPTH, "2");
             config.setProperty(Config.NODE_NAME, "diaco-two");
             config.setProperty(Config.NODE_COOKIE, "secret");
+            config.setProperty(Config.NODE_MEMBERS, "localhost");
             diacoTwo = Diaco.newInstance(config);
             return diacoTwo;
         } else {

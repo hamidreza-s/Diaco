@@ -9,6 +9,9 @@ import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.MessageListener;
 import com.hazelcast.core.ReplicatedMap;
 import com.hazelcast.core.ITopic;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.io.*;
 
@@ -31,14 +34,24 @@ public class Node implements MessageListener<byte[]> {
 
     public void start() {
         if(config.containsKey(Config.NODE_NAME)) {
+            String nodeName = config.getProperty(Config.NODE_NAME);
+            String nodeMembers = config.getProperty(Config.NODE_MEMBERS, "127.0.0.1");
+
             com.hazelcast.config.Config hazelcastConfig = new com.hazelcast.config.Config();
+            com.hazelcast.config.TcpIpConfig tcpIpConfig = new com.hazelcast.config.TcpIpConfig();
+            hazelcastConfig.setInstanceName(nodeName);
+            List<String> clusterMembers = new ArrayList<String>();
+            clusterMembers.add(nodeMembers);
+            tcpIpConfig.setMembers(clusterMembers);
+            hazelcastConfig.getNetworkConfig().getJoin().setTcpIpConfig(tcpIpConfig);
+
             this.hazelcast = Hazelcast.newHazelcastInstance(hazelcastConfig);
-            this.name = config.getProperty(Config.NODE_NAME);
+            this.name = nodeName;
             this.local = false;
             this.nodes = hazelcast.getReplicatedMap(Node.NODES_NAME_MAP);
-            this.nodes.put(name, hazelcast.getName());
+            this.nodes.put(nodeName, hazelcast.getName());
 
-            this.topic = hazelcast.getTopic(name);
+            this.topic = hazelcast.getTopic(nodeName);
             this.topic.addMessageListener(this);
         } else {
             this.local = true;
