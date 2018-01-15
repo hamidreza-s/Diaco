@@ -31,6 +31,7 @@ public class DiacoTestHelper {
             config.setProperty(Config.NODE_NAME, "diaco-one");
             config.setProperty(Config.NODE_COOKIE, "secret");
             config.setProperty(Config.NODE_MEMBERS, "localhost");
+            config.setProperty(Config.NODE_LOGGER, "none");
             diacoOne = Diaco.newInstance(config);
             return diacoOne;
         } else {

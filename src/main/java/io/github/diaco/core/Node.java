@@ -36,6 +36,7 @@ public class Node implements MessageListener<byte[]> {
         if(config.containsKey(Config.NODE_NAME)) {
             String nodeName = config.getProperty(Config.NODE_NAME);
             String nodeMembers = config.getProperty(Config.NODE_MEMBERS, "127.0.0.1");
+            String hazelcastLogger = config.getProperty(Config.NODE_LOGGER, "none");
 
             com.hazelcast.config.Config hazelcastConfig = new com.hazelcast.config.Config();
             com.hazelcast.config.TcpIpConfig tcpIpConfig = new com.hazelcast.config.TcpIpConfig();
@@ -44,6 +45,7 @@ public class Node implements MessageListener<byte[]> {
             clusterMembers.add(nodeMembers);
             tcpIpConfig.setMembers(clusterMembers);
             hazelcastConfig.getNetworkConfig().getJoin().setTcpIpConfig(tcpIpConfig);
+            hazelcastConfig.setProperty("hazelcast.logging.type", hazelcastLogger);
 
             this.hazelcast = Hazelcast.newHazelcastInstance(hazelcastConfig);
             this.name = nodeName;
