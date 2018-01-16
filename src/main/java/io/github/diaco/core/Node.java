@@ -37,14 +37,15 @@ public class Node implements MessageListener<byte[]> {
             String nodeName = config.getProperty(Config.NODE_NAME);
             String nodeMembers = config.getProperty(Config.NODE_MEMBERS, "127.0.0.1");
             String hazelcastLogger = config.getProperty(Config.NODE_LOGGER, "none");
-
             com.hazelcast.config.Config hazelcastConfig = new com.hazelcast.config.Config();
-            com.hazelcast.config.TcpIpConfig tcpIpConfig = new com.hazelcast.config.TcpIpConfig();
             hazelcastConfig.setInstanceName(nodeName);
+            com.hazelcast.config.NetworkConfig networkConfig = hazelcastConfig.getNetworkConfig();
+            networkConfig.getJoin().getMulticastConfig().setEnabled(false);
+            com.hazelcast.config.TcpIpConfig tcpIpConfig = networkConfig.getJoin().getTcpIpConfig();
             List<String> clusterMembers = new ArrayList<String>();
             clusterMembers.add(nodeMembers);
             tcpIpConfig.setMembers(clusterMembers);
-            hazelcastConfig.getNetworkConfig().getJoin().setTcpIpConfig(tcpIpConfig);
+            tcpIpConfig.setEnabled(true);
             hazelcastConfig.setProperty("hazelcast.logging.type", hazelcastLogger);
 
             this.hazelcast = Hazelcast.newHazelcastInstance(hazelcastConfig);
@@ -52,7 +53,6 @@ public class Node implements MessageListener<byte[]> {
             this.local = false;
             this.nodes = hazelcast.getReplicatedMap(Node.NODES_NAME_MAP);
             this.nodes.put(nodeName, hazelcast.getName());
-
             this.topic = hazelcast.getTopic(nodeName);
             this.topic.addMessageListener(this);
         } else {
