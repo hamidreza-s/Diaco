@@ -28,16 +28,20 @@ public class DiacoLocalActorTest {
         final CountDownLatch lock = new CountDownLatch(2);
 
         Actor<String> actorOne = new RawActor<String>() {
-            public void receive(Message message, State<String> state) {
+            @Override
+            public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorTwo->ActorOne", message.getTag());
                 lock.countDown();
+                return state;
             }
         };
 
         Actor<String> actorTwo = new RawActor<String>() {
-            public void receive(Message message, State<String> state) {
+            @Override
+            public State receive(Message message, State<String> state) {
                 assertEquals("ActorOne->ActorTwo", message.getTag());
                 lock.countDown();
+                return state;
             }
         };
 
@@ -54,10 +58,12 @@ public class DiacoLocalActorTest {
     public void testEchoMessagePassing() throws InterruptedException {
         final CountDownLatch lock = new CountDownLatch(1);
         Actor<Object> actorEchoing = new RawActor<Object>() {
-            public void receive(Message message, State<Object> state) {
+            @Override
+            public State<Object> receive(Message message, State<Object> state) {
                 Reference senderActor = Reference.fromString(message.getFrom());
                 String senderTag = message.getTag();
                 send(senderActor, new Message.Builder().tag(senderTag).build());
+                return state;
             }
         };
 
@@ -65,12 +71,16 @@ public class DiacoLocalActorTest {
 
         diaco.spawn(new RawActor<Object>() {
             private String echo = "foo";
-            public void init(State<Object> state) {
+            @Override
+            public State<Object> init() {
                 send(actorEchoingRef, new Message.Builder().tag(echo).from(this.getReference().toString()).build());
+                return new State<Object>();
             }
-            public void receive(Message message, State<Object> state) {
+            @Override
+            public State<Object> receive(Message message, State<Object> state) {
                 assertEquals(message.getTag(), echo);
                 lock.countDown();
+                return state;
             }
         });
 
@@ -85,15 +95,17 @@ public class DiacoLocalActorTest {
 
         Actor<Object> actorOne = new RawActor<Object>() {
             @Override
-            public void receive(Message message, State<Object> state) {
+            public State<Object> receive(Message message, State<Object> state) {
                 lockOne.countDown();
+                return state;
             }
         };
 
         Actor<Object> actorTwo = new RawActor<Object>() {
             @Override
-            public void receive(Message message, State<Object> state) {
+            public State<Object> receive(Message message, State<Object> state) {
                 lockTwo.countDown();
+                return state;
             }
         };
 
@@ -102,11 +114,12 @@ public class DiacoLocalActorTest {
 
         diaco.spawn(new RawActor<Object>() {
             @Override
-            public void init(State<Object> state) {
+            public State<Object> init() {
                 for(int i = 0; i < messageNumber; i++) {
                     send(actorOneRef, new Message.Builder().build());
                     send(actorTwoRef, new Message.Builder().build());
                 }
+                return new State();
             }
         });
 
@@ -120,7 +133,7 @@ public class DiacoLocalActorTest {
 
         diaco.spawn(new RawActor<Object>() {
             @Override
-            public void init(State<Object> state) {
+            public State<Object> init() {
 
                 final CountDownLatch innerLock = new CountDownLatch(2);
 
@@ -147,6 +160,7 @@ public class DiacoLocalActorTest {
                 assertFalse(actorOneRef.isAlive());
 
                 outerLock.countDown();
+                return new State<Object>();
             }
         });
 
@@ -159,15 +173,16 @@ public class DiacoLocalActorTest {
 
         diaco.spawn(new RawActor<Object>() {
             @Override
-            public void init(State<Object> state) {
+            public State<Object> init() {
 
                 final CountDownLatch innerLock = new CountDownLatch(2);
 
                 Reference actorOneRef = diaco.spawn(new RawActor<Object>() {
                     @Override
-                    public void receive(Message message, State<Object> state) {
+                    public State<Object> receive(Message message, State<Object> state) {
                         assertEquals(Message.Type.EXITED, message.getType());
                         innerLock.countDown();
+                        return state;
                     }
                 });
 
@@ -186,6 +201,7 @@ public class DiacoLocalActorTest {
                 assertFalse(actorTwoRef.isAlive());
 
                 outerLock.countDown();
+                return new State<Object>();
             }
         });
 
@@ -198,32 +214,27 @@ public class DiacoLocalActorTest {
 
         diaco.spawn(new RawActor<Object>() {
             @Override
-            public void init(State<Object> state) {
+            public State<Object> init() {
                 final CountDownLatch innerLock = new CountDownLatch(1);
 
                 Reference actorTarget = diaco.spawn(new RawActor<String>() {
                     @Override
-                    public void init(State<String> state) {
-                        List<String> stateBody = state.getBody();
-                        stateBody.add("Init");
-                        state.setBody(stateBody);
+                    public State<String> init() {
+                        return new State<String>("Init");
                     }
 
                     @Override
-                    public void receive(Message message, State<String> state) {
-                        List<String> stateBody = state.getBody();
-                        stateBody.add("Recv");
-                        state.setBody(stateBody);
-                        if(state.getBody().size() == 4)
-                            stop();
+                    public State<String> receive(Message message, State<String> state) {
+                        if(state.getBody().length() == 12) {
+                            return new State<String>(state.getBody() + "Recv", false);
+                        }
+
+                        return new State<String>(state.getBody() + "Recv");
                     }
 
                     @Override
                     public void terminate(State<String> state) {
-                        assertEquals("Init", state.getBody().get(0));
-                        assertEquals("Recv", state.getBody().get(1));
-                        assertEquals("Recv", state.getBody().get(2));
-                        assertEquals("Recv", state.getBody().get(3));
+                        assertEquals("InitRecvRecvRecv", state.getBody());
                         innerLock.countDown();
                     }
                 });
@@ -235,6 +246,7 @@ public class DiacoLocalActorTest {
                 try { innerLock.await(); } catch(InterruptedException e) { e.printStackTrace(); }
 
                 outerLock.countDown();
+                return new State<Object>();
             }
         });
 

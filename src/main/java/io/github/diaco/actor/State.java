@@ -5,19 +5,31 @@ import java.util.List;
 
 public class State<StateBodyType> {
 
-    // TODO: use algebraic type (composit type) for state
+    // TODO: use algebraic type (composite type) for state
 
-    private List<StateBodyType> body;
+    private StateBodyType body;
+    private boolean next;
 
     public State() {
-        this.body = new ArrayList<StateBodyType>();
+        this.next = true;
+        this.body = null;
     }
 
-    public List<StateBodyType> getBody() {
+    public State(StateBodyType body) {
+        this.next = true;
+        this.body = body;
+    }
+
+    public State(StateBodyType body, boolean next) {
+        this.next = next;
+        this.body = body;
+    }
+
+    public StateBodyType getBody() {
         return body;
     }
 
-    public void setBody(List<StateBodyType> body) {
-        this.body = body;
+    public boolean getNext() {
+        return next;
     }
 }

@@ -39,7 +39,6 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
 
     protected AbstractActor(int priority, int mailboxSize) {
         this.status = Status.STARTING;
-        this.state = new State<StateBodyType>();
         this.priority = priority;
         this.reduction = 0;
         this.identifier = identifier;
@@ -50,9 +49,9 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         this.monitoredBy = new HashMap<Integer, Reference>();
     }
 
-    public abstract void init(State<StateBodyType> state);
+    public abstract State<StateBodyType> init();
 
-    public abstract void receive(Message message, State<StateBodyType> state);
+    public abstract State<StateBodyType> receive(Message message, State<StateBodyType> state);
 
     public abstract void terminate(State<StateBodyType> state);
 
@@ -141,7 +140,12 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
             switch(message.getType()) {
                 case EXIT:
                     if(trapExit) {
-                        receive(message, this.state);
+                        this.state = receive(message, this.state);
+                        if(!this.state.getNext()){
+                            this.status = Status.EXITING;
+                            this.isAlive = false;
+                            return;
+                        }
                     } else {
                         this.status = Status.EXITING;
                         this.isAlive = false;
@@ -149,10 +153,15 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
                     }
                     break;
                 case EXITED:
-                    receive(new Message.Builder()
+                    this.state = receive(new Message.Builder()
                             .type(Message.Type.EXITED)
                             .from(senderReference.toString())
                             .build(), this.state);
+                    if(!this.state.getNext()){
+                        this.status = Status.EXITING;
+                        this.isAlive = false;
+                        return;
+                    }
                 case LINK:
                     this.putIntoLinkedBy(senderReference.getActorIdentifier(), senderReference);
                     break;
@@ -168,12 +177,16 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
             }
 
         } else {
-            receive(message, this.state);
+            this.state = receive(message, this.state);
+            if(!this.state.getNext()){
+                this.status = Status.EXITING;
+                this.isAlive = false;
+            }
         }
     }
 
     private synchronized void internalInit() {
-        init(this.state);
+        this.state = init();
     }
 
     private synchronized void internalLoop() {

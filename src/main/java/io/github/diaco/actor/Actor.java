@@ -15,8 +15,8 @@ public interface Actor<StateBodyType> extends Runnable {
         EXITING
     }
 
-    public void init(State<StateBodyType> state);
-    public void receive(Message message, State<StateBodyType> state);
+    public State<StateBodyType> init();
+    public State<StateBodyType> receive(Message message, State<StateBodyType> state);
     public void send(Reference reference, Message message);
     public void terminate(State<StateBodyType> state);
     public void exit(Reference reference);

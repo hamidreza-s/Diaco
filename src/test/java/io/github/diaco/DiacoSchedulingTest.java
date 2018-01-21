@@ -28,49 +28,55 @@ public class DiacoSchedulingTest {
 
         Actor<String> actorOne = new RawActor<String>() {
             @Override
-            public void receive(Message message, State<String> state) {
+            public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorTwo->ActorOne", message.getTag());
                 lock.countDown();
+                return state;
             }
         };
 
         Actor<String> actorTwo = new RawActor<String>() {
             @Override
-            public void receive(Message message, State<String> state) {
+            public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorOne->ActorTwo", message.getTag());
                 lock.countDown();
+                return state;
             }
         };
 
         Actor<String> actorThree = new RawActor<String>() {
             @Override
-            public void receive(Message message, State<String> state) {
+            public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorFour->ActorThree", message.getTag());
                 lock.countDown();
+                return state;
             }
         };
 
         Actor<String> actorFour = new RawActor<String>() {
             @Override
-            public void receive(Message message, State<String> state) {
+            public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorThree->ActorFour", message.getTag());
                 lock.countDown();
+                return state;
             }
         };
 
         Actor<String> actorFive = new RawActor<String>() {
             @Override
-            public void receive(Message message, State<String> state) {
+            public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorSix->ActorFive", message.getTag());
                 lock.countDown();
+                return state;
             }
         };
 
         Actor<String> actorSix = new RawActor<String>() {
             @Override
-            public void receive(Message message, State<String> state) {
+            public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorFive->ActorSix", message.getTag());
                 lock.countDown();
+                return state;
             }
         };
 
@@ -96,8 +102,9 @@ public class DiacoSchedulingTest {
         final CountDownLatch lock = new CountDownLatch(1);
         final Reference actorSpawningRef = diaco.spawn(new RawActor<Object>() {
             @Override
-            public void init(State<Object> state) {
+            public State<Object> init() {
                 lock.countDown();
+                return new State<Object>();
             }
         });
 
@@ -116,8 +123,9 @@ public class DiacoSchedulingTest {
 
         diaco.spawn(new RawActor<Object>() {
             @Override
-            public void init(State<Object> state) {
+            public State<Object> init() {
                 exit(actorExitingRef);
+                return new State<Object>();
             }
         });
 
@@ -130,27 +138,30 @@ public class DiacoSchedulingTest {
 
         diaco.spawn(new RawActor<Object>() {
             @Override
-            public void init(State<Object> state) {
+            public State<Object> init() {
 
                 final CountDownLatch innerLock = new CountDownLatch(1);
 
                 final Reference receivingActorRef = diaco.spawn(new RawActor<Object>() {
                     @Override
-                    public void receive(Message message, State<Object> state) {
+                    public State<Object> receive(Message message, State<Object> state) {
                         innerLock.countDown();
+                        return state;
                     }
                 });
 
                 diaco.spawn(new RawActor<Object>() {
                     @Override
-                    public void init(State<Object> state) {
+                    public State<Object> init() {
                         send(receivingActorRef, new Message.Builder().build());
+                        return new State<Object>();
                     }
                 });
 
                 try { innerLock.await(); } catch(InterruptedException e) { e.printStackTrace(); }
 
                 outerLock.countDown();
+                return new State<Object>();
             }
         });
 
@@ -164,7 +175,7 @@ public class DiacoSchedulingTest {
 
         diaco.spawn(new RawActor<Object>() {
             @Override
-            public void init(State<Object> state) {
+            public State<Object> init() {
                 send(uninitializedActor, new Message.Builder().build());
                 link(uninitializedActor);
                 unlink(uninitializedActor);
@@ -173,6 +184,7 @@ public class DiacoSchedulingTest {
                 exit(uninitializedActor);
                 exited(uninitializedActor);
                 lock.countDown();
+                return new State<Object>();
             }
         });
 
