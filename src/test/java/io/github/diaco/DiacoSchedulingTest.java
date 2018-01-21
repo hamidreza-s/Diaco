@@ -1,12 +1,11 @@
 package io.github.diaco;
 
 import io.github.diaco.actor.Actor;
-import io.github.diaco.actor.RawActor;
+import io.github.diaco.actor.BaseActor;
 import io.github.diaco.actor.Reference;
 import io.github.diaco.actor.State;
 import io.github.diaco.message.Message;
 
-import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
@@ -26,7 +25,7 @@ public class DiacoSchedulingTest {
     public void testConcurrentMessagePassing() throws InterruptedException {
         final CountDownLatch lock = new CountDownLatch(6);
 
-        Actor<String> actorOne = new RawActor<String>() {
+        Actor<String> actorOne = new BaseActor<String>() {
             @Override
             public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorTwo->ActorOne", message.getTag());
@@ -35,7 +34,7 @@ public class DiacoSchedulingTest {
             }
         };
 
-        Actor<String> actorTwo = new RawActor<String>() {
+        Actor<String> actorTwo = new BaseActor<String>() {
             @Override
             public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorOne->ActorTwo", message.getTag());
@@ -44,7 +43,7 @@ public class DiacoSchedulingTest {
             }
         };
 
-        Actor<String> actorThree = new RawActor<String>() {
+        Actor<String> actorThree = new BaseActor<String>() {
             @Override
             public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorFour->ActorThree", message.getTag());
@@ -53,7 +52,7 @@ public class DiacoSchedulingTest {
             }
         };
 
-        Actor<String> actorFour = new RawActor<String>() {
+        Actor<String> actorFour = new BaseActor<String>() {
             @Override
             public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorThree->ActorFour", message.getTag());
@@ -62,7 +61,7 @@ public class DiacoSchedulingTest {
             }
         };
 
-        Actor<String> actorFive = new RawActor<String>() {
+        Actor<String> actorFive = new BaseActor<String>() {
             @Override
             public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorSix->ActorFive", message.getTag());
@@ -71,7 +70,7 @@ public class DiacoSchedulingTest {
             }
         };
 
-        Actor<String> actorSix = new RawActor<String>() {
+        Actor<String> actorSix = new BaseActor<String>() {
             @Override
             public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorFive->ActorSix", message.getTag());
@@ -100,7 +99,7 @@ public class DiacoSchedulingTest {
     @Test
     public void testActorSpawning() throws InterruptedException {
         final CountDownLatch lock = new CountDownLatch(1);
-        final Reference actorSpawningRef = diaco.spawn(new RawActor<Object>() {
+        final Reference actorSpawningRef = diaco.spawn(new BaseActor<Object>() {
             @Override
             public State<Object> init() {
                 lock.countDown();
@@ -114,14 +113,14 @@ public class DiacoSchedulingTest {
     @Test
     public void testActorExiting() throws InterruptedException {
         final CountDownLatch lock = new CountDownLatch(1);
-        final Reference actorExitingRef = diaco.spawn(new RawActor<Object>() {
+        final Reference actorExitingRef = diaco.spawn(new BaseActor<Object>() {
             @Override
             public void terminate(State<Object> state) {
                 lock.countDown();
             }
         });
 
-        diaco.spawn(new RawActor<Object>() {
+        diaco.spawn(new BaseActor<Object>() {
             @Override
             public State<Object> init() {
                 exit(actorExitingRef);
@@ -136,13 +135,13 @@ public class DiacoSchedulingTest {
     public void testActorSpawningDepth() throws InterruptedException {
         final CountDownLatch outerLock = new CountDownLatch(1);
 
-        diaco.spawn(new RawActor<Object>() {
+        diaco.spawn(new BaseActor<Object>() {
             @Override
             public State<Object> init() {
 
                 final CountDownLatch innerLock = new CountDownLatch(1);
 
-                final Reference receivingActorRef = diaco.spawn(new RawActor<Object>() {
+                final Reference receivingActorRef = diaco.spawn(new BaseActor<Object>() {
                     @Override
                     public State<Object> receive(Message message, State<Object> state) {
                         innerLock.countDown();
@@ -150,7 +149,7 @@ public class DiacoSchedulingTest {
                     }
                 });
 
-                diaco.spawn(new RawActor<Object>() {
+                diaco.spawn(new BaseActor<Object>() {
                     @Override
                     public State<Object> init() {
                         send(receivingActorRef, new Message.Builder().build());
@@ -173,7 +172,7 @@ public class DiacoSchedulingTest {
         final CountDownLatch lock = new CountDownLatch(1);
         final Reference uninitializedActor = (Reference) null;
 
-        diaco.spawn(new RawActor<Object>() {
+        diaco.spawn(new BaseActor<Object>() {
             @Override
             public State<Object> init() {
                 send(uninitializedActor, new Message.Builder().build());

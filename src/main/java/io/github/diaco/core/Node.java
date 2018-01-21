@@ -1,6 +1,7 @@
 package io.github.diaco.core;
 
 import io.github.diaco.actor.Actor;
+import io.github.diaco.actor.BaseActor;
 import io.github.diaco.actor.Reference;
 import io.github.diaco.message.Envelope;
 import io.github.diaco.message.Message;
@@ -109,7 +110,8 @@ public class Node implements MessageListener<byte[]> {
             Envelope envelope = (Envelope) objectEnvelope;
             Reference recipientReference = envelope.getTo();
             Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
-            recipientActor.putIntoMailbox(envelope);
+            BaseActor baseRecipientActor = (BaseActor) recipientActor;
+            baseRecipientActor.putIntoMailbox(envelope);
         } catch(Exception e) {
             e.printStackTrace();
         }

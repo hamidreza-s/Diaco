@@ -1,12 +1,11 @@
 package io.github.diaco;
 
 import io.github.diaco.actor.Actor;
-import io.github.diaco.actor.RawActor;
+import io.github.diaco.actor.BaseActor;
 import io.github.diaco.actor.Reference;
 import io.github.diaco.actor.State;
 import io.github.diaco.message.Message;
 
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
@@ -28,7 +27,7 @@ public class DiacoRemoteActorTest {
     public void testSimpleMessagePassing() throws InterruptedException {
         final CountDownLatch lock = new CountDownLatch(2);
 
-        Actor<String> actorOne = new RawActor<String>() {
+        Actor<String> actorOne = new BaseActor<String>() {
             public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorTwo->ActorOne", message.getTag());
                 lock.countDown();
@@ -36,7 +35,7 @@ public class DiacoRemoteActorTest {
             }
         };
 
-        Actor<String> actorTwo = new RawActor<String>() {
+        Actor<String> actorTwo = new BaseActor<String>() {
             public State<String> receive(Message message, State<String> state) {
                 assertEquals("ActorOne->ActorTwo", message.getTag());
                 lock.countDown();
@@ -56,7 +55,7 @@ public class DiacoRemoteActorTest {
     @Test
     public void testEchoMessagePassing() throws InterruptedException {
         final CountDownLatch lock = new CountDownLatch(1);
-        Actor<Object> actorEchoing = new RawActor<Object>() {
+        Actor<Object> actorEchoing = new BaseActor<Object>() {
             public State<Object> receive(Message message, State<Object> state) {
                 Reference senderActor = Reference.fromString(message.getFrom());
                 String senderTag = message.getTag();
@@ -67,7 +66,7 @@ public class DiacoRemoteActorTest {
 
         final Reference actorEchoingRef = diacoOne.spawn(actorEchoing);
 
-        diacoTwo.spawn(new RawActor<Object>() {
+        diacoTwo.spawn(new BaseActor<Object>() {
             private String echo = "foo";
             @Override
             public State<Object> init() {
@@ -91,7 +90,7 @@ public class DiacoRemoteActorTest {
         final CountDownLatch lockOne = new CountDownLatch(messageNumber);
         final CountDownLatch lockTwo = new CountDownLatch(messageNumber);
 
-        Actor<Object> actorOne = new RawActor<Object>() {
+        Actor<Object> actorOne = new BaseActor<Object>() {
             @Override
             public State<Object> receive(Message message, State<Object> state) {
                 lockOne.countDown();
@@ -99,7 +98,7 @@ public class DiacoRemoteActorTest {
             }
         };
 
-        Actor<Object> actorTwo = new RawActor<Object>() {
+        Actor<Object> actorTwo = new BaseActor<Object>() {
             @Override
             public State<Object> receive(Message message, State<Object> state) {
                 lockTwo.countDown();
@@ -110,7 +109,7 @@ public class DiacoRemoteActorTest {
         final Reference actorOneRef = diacoOne.spawn(actorOne);
         final Reference actorTwoRef = diacoOne.spawn(actorTwo);
 
-        diacoTwo.spawn(new RawActor<Object>() {
+        diacoTwo.spawn(new BaseActor<Object>() {
             @Override
             public State<Object> init() {
                 for(int i = 0; i < messageNumber; i++) {
@@ -129,20 +128,20 @@ public class DiacoRemoteActorTest {
     public void testActorLinking() throws InterruptedException {
         final CountDownLatch outerLock = new CountDownLatch(1);
 
-        diacoOne.spawn(new RawActor<Object>() {
+        diacoOne.spawn(new BaseActor<Object>() {
             @Override
             public State<Object> init() {
 
                 final CountDownLatch innerLock = new CountDownLatch(2);
 
-                Reference actorOneRef = diacoTwo.spawn(new RawActor<Object>() {
+                Reference actorOneRef = diacoTwo.spawn(new BaseActor<Object>() {
                     @Override
                     public void terminate(State<Object> state) {
                         innerLock.countDown();
                     }
                 });
 
-                Reference actorTwoRef = diacoTwo.spawn(new RawActor<Object>() {
+                Reference actorTwoRef = diacoTwo.spawn(new BaseActor<Object>() {
                     @Override
                     public void terminate(State<Object> state) {
                         innerLock.countDown();
@@ -169,13 +168,13 @@ public class DiacoRemoteActorTest {
     public void testActorMonitoring() throws InterruptedException {
         final CountDownLatch outerLock = new CountDownLatch(1);
 
-        diacoOne.spawn(new RawActor<Object>() {
+        diacoOne.spawn(new BaseActor<Object>() {
             @Override
             public State<Object> init() {
 
                 final CountDownLatch innerLock = new CountDownLatch(2);
 
-                Reference actorOneRef = diacoTwo.spawn(new RawActor<Object>() {
+                Reference actorOneRef = diacoTwo.spawn(new BaseActor<Object>() {
                     @Override
                     public State<Object> receive(Message message, State<Object> state) {
                         assertEquals(Message.Type.EXITED, message.getType());
@@ -184,7 +183,7 @@ public class DiacoRemoteActorTest {
                     }
                 });
 
-                Reference actorTwoRef = diacoTwo.spawn(new RawActor<Object>() {
+                Reference actorTwoRef = diacoTwo.spawn(new BaseActor<Object>() {
                     @Override
                     public void terminate(State<Object> state) {
                         innerLock.countDown();
@@ -210,12 +209,12 @@ public class DiacoRemoteActorTest {
     public void testActorState() throws InterruptedException {
         final CountDownLatch outerLock = new CountDownLatch(1);
 
-        diacoOne.spawn(new RawActor<Object>() {
+        diacoOne.spawn(new BaseActor<Object>() {
             @Override
             public State<Object> init() {
                 final CountDownLatch innerLock = new CountDownLatch(1);
 
-                Reference actorTarget = diacoTwo.spawn(new RawActor<String>() {
+                Reference actorTarget = diacoTwo.spawn(new BaseActor<String>() {
                     @Override
                     public State<String> init() {
                         return new State<String>("Init");

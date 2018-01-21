@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
-abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Comparable<Actor> {
+public class BaseActor<StateBodyType> implements Actor<StateBodyType>, Comparable<Actor> {
 
     // TODO: add API for trapExit
     // TODO: put actor's runnable future here
@@ -33,11 +33,11 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
     private Map<Integer, Reference> monitoredBy;
 
 
-    protected AbstractActor() {
+    protected BaseActor() {
         this(DEFAULT_PRIORITY, DEFAULT_MAILBOX_SIZE);
     }
 
-    protected AbstractActor(int priority, int mailboxSize) {
+    protected BaseActor(int priority, int mailboxSize) {
         this.status = Status.STARTING;
         this.priority = priority;
         this.reduction = 0;
@@ -49,11 +49,15 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
         this.monitoredBy = new HashMap<Integer, Reference>();
     }
 
-    public abstract State<StateBodyType> init();
+    public State<StateBodyType> init() {
+        return new State<StateBodyType>();
+    }
 
-    public abstract State<StateBodyType> receive(Message message, State<StateBodyType> state);
+    public State<StateBodyType> receive(Message message, State<StateBodyType> state) {
+        return state;
+    }
 
-    public abstract void terminate(State<StateBodyType> state);
+    public void terminate(State<StateBodyType> state) {}
 
     public synchronized final void send(Reference reference, Message message) {
         this.reference.send(reference, message);
@@ -109,6 +113,7 @@ abstract class AbstractActor<StateBodyType> implements Actor<StateBodyType>, Com
     }
 
     public final void setScheduler(Scheduler scheduler) {
+        if(this.scheduler != null) return;
         this.scheduler = scheduler;
     }
 

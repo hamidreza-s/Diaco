@@ -33,15 +33,4 @@ public interface Actor<StateBodyType> extends Runnable {
     public Reference getReference();
     public boolean hasNode();
     public boolean isAlive();
-
-    // TODO: make following api private to diaco
-    public void setScheduler(Scheduler scheduler);
-    public void setNode(Node node);
-    public void setReference(Reference reference);
-    public void setIdentifier(int identifier);
-    public void putIntoMailbox(Envelope envelope);
-    public void putIntoLinkedBy(Integer actorIdentifier, Reference reference);
-    public void putIntoMonitoredBy(Integer actorIdentifier, Reference reference);
-    public void removeFromLinkedBy(Integer actorIdentifier);
-    public void removeFromMonitoredBy(Integer actorIdentifier);
 }

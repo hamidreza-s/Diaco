@@ -9,7 +9,6 @@ import java.util.regex.Matcher;
 
 public class Reference implements Serializable {
 
-    // TODO: put message into envelope
     // TODO: put actor's Future here
 
     private int actorIdentifier;
@@ -50,7 +49,8 @@ public class Reference implements Serializable {
             if(!recipientActor.isAlive() || recipientActor.getStatus() == Actor.Status.EXITING) {
                 return;
             } else {
-                recipientActor.putIntoMailbox(envelope);
+                BaseActor baseRecipientActor = (BaseActor) recipientActor;
+                baseRecipientActor.putIntoMailbox(envelope);
             }
         } else {
             senderActor.getNode().send(envelope);
@@ -67,7 +67,8 @@ public class Reference implements Serializable {
         if(!this.isValid(recipientReference)) return;
         Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
-        senderActor.putIntoLinkedBy(recipientActor.getIdentifier(), recipientReference);
+        BaseActor baseSenderActor = (BaseActor) senderActor;
+        baseSenderActor.putIntoLinkedBy(recipientActor.getIdentifier(), recipientReference);
         this.send(recipientActor, recipientReference,
                 new Message
                 .Builder()
@@ -80,7 +81,8 @@ public class Reference implements Serializable {
         if(!this.isValid(recipientReference)) return;
         Actor recipientActor = Registry.getActor(recipientReference.getActorIdentifier());
         Actor senderActor = Registry.getActor(this.getActorIdentifier());
-        senderActor.removeFromLinkedBy(recipientReference.getActorIdentifier());
+        BaseActor baseSenderActor = (BaseActor) senderActor;
+        baseSenderActor.removeFromLinkedBy(recipientReference.getActorIdentifier());
         this.send(recipientActor, recipientReference,
                 new Message
                 .Builder()

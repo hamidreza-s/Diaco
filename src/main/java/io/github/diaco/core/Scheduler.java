@@ -1,6 +1,7 @@
 package io.github.diaco.core;
 
 import io.github.diaco.actor.Actor;
+import io.github.diaco.actor.BaseActor;
 import io.github.diaco.actor.Reference;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,16 +40,17 @@ public class Scheduler {
         if(actor.getIdentifier() != null)
             throw new RuntimeException("re-spawning actor is not allowed!");
 
-        // @NOTE: puttin actor into run-queue must be the last thing
+        // @NOTE: putting actor into run-queue must be the last thing
 
         int identifier = getFreeActorIdentifier();
         Reference reference = new Reference(identifier, node.getName());
-        actor.setScheduler(this);
-        actor.setNode(node);
-        actor.setReference(reference);
-        actor.setIdentifier(identifier);
-        Registry.addActor(actor);
-        this.putIntoRunQueue(actor);
+        BaseActor baseActor = (BaseActor) actor;
+        baseActor.setScheduler(this);
+        baseActor.setNode(node);
+        baseActor.setReference(reference);
+        baseActor.setIdentifier(identifier);
+        Registry.addActor(baseActor);
+        this.putIntoRunQueue(baseActor);
         return reference;
     }
 
