@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/hamidreza-s/Diaco.svg?branch=master)](https://travis-ci.org/hamidreza-s/Diaco)
+
 # Diaco
 
 Diaco is a distributed actor framework for Java. It simplifies concurrent programming
