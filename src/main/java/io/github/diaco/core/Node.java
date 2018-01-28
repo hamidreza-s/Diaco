@@ -69,7 +69,7 @@ public class Node implements MessageListener<byte[]> {
 
     public void send(Envelope envelope) {
         if(local)
-            throw new RuntimeException("node is note started!");
+            throw new RuntimeException("node is not started!");
 
         Message message = envelope.getMessage();
         Reference senderReference = envelope.getFrom();
